@@ -20,13 +20,33 @@ const licenseRouter = require("./routes/license"); // 1. Hubungkan file route ba
 const app = express();
 
 // Allow images to be embedded/loaded cross-origin (frontend runs on a different port/domain)
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+// app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL || "http://localhost:3000",
+//     credentials: true,
+//   }),
+// );
+
+// Ambil variabel dari .env
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(",")
+  : ["http://localhost:3000"];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      // Izinkan jika origin ada di daftar atau jika request tidak memiliki origin (misal: tools server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
+
 app.use(morgan("dev"));
 
 // Midtrans webhook needs raw JSON body too — express.json() is fine, Midtrans posts JSON
