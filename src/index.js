@@ -23,8 +23,7 @@ const app = express();
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
   cors({
-    origin:
-      process.env.CLIENT_URL || "https://optik-kayumanis-frontend.vercel.app",
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     credentials: true,
   }),
 );
