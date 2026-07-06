@@ -1,21 +1,7 @@
-const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
 
-// Files are stored on local disk under backend/uploads and served statically
-// from /uploads (see src/index.js). Good enough for a single-server setup;
-// swap the storage engine here first if this ever needs to move to S3/Cloudinary.
-const uploadDir = path.join(__dirname, "..", "..", "uploads");
-fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${ext}`);
-  },
-});
+// 1. Ganti diskStorage menjadi memoryStorage agar file tidak ditulis ke disk
+const storage = multer.memoryStorage();
 
 function fileFilter(req, file, cb) {
   if (!file.mimetype.startsWith("image/")) {
@@ -24,10 +10,11 @@ function fileFilter(req, file, cb) {
   cb(null, true);
 }
 
+// 2. Sekarang upload tidak lagi membutuhkan fs.mkdirSync atau path
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024, files: 10 }, // 5MB per file, max 10 files
+  limits: { fileSize: 5 * 1024 * 1024, files: 10 },
 });
 
 module.exports = upload;
