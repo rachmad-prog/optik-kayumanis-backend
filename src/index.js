@@ -65,6 +65,13 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Optik Kayumanis API berjalan di http://localhost:${PORT}`);
-});
+
+// Vercel (@vercel/node) imports this file and calls the exported app/handler directly —
+// it does NOT run app.listen(). Only listen when running locally / on a normal Node host.
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Optik Kayumanis API berjalan di http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
