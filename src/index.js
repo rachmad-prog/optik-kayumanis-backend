@@ -53,7 +53,7 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 // Uploaded product images (see src/middleware/upload.js)
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 app.get("/api/health", (req, res) =>
   res.json({ status: "ok", service: "optikkayumanis-api" }),
