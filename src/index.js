@@ -23,7 +23,8 @@ const app = express();
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin:
+      process.env.CLIENT_URL || "https://optik-kayumanis-frontend.vercel.app",
     credentials: true,
   }),
 );
@@ -70,7 +71,9 @@ const PORT = process.env.PORT || 4000;
 // it does NOT run app.listen(). Only listen when running locally / on a normal Node host.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`Optik Kayumanis API berjalan di http://localhost:${PORT}`);
+    console.log(
+      `Optik Kayumanis API berjalan di https://optik-kayumanis-frontend.vercel.app:${PORT}`,
+    );
   });
 }
 
