@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optik Kayumanis — Kacamata &amp; Lensa Kontak Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cinnamon: { DEFAULT: '#8B5E3C', dark: '#4A2E1E', light: '#A8794F' },
+          cream: { DEFAULT: '#F5EDE3', card: '#FFFCF8' },
+          charcoal: '#2A2622',
+          warmgray: '#7A756D',
+          sage: '#6E8B63',
+          beige: '#E4D8C8'
+        },
+        fontFamily: {
+          sans: ['"Plus Jakarta Sans"', 'sans-serif']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  .fade-slide { transition: opacity .7s ease; }
+  .marquee-track { animation: marquee 22s linear infinite; }
+  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .filter-btn.active { background-color: #8B5E3C; color: #FFFCF8; border-color: #8B5E3C; }
+</style>
+</head>
+<body class="bg-cream text-charcoal font-sans antialiased">
+
+<!-- ============ TOP BAR ============ -->
+<div class="bg-charcoal text-cream/80 text-xs">
+  <div class="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
+    <p class="hidden sm:block">Periksa Mata Gratis di Setiap Pembelian Frame + Lensa</p>
+    <p class="mx-auto sm:mx-0">Buka Setiap Hari · 09.00 – 20.00 WIB</p>
+  </div>
+</div>
+
+<!-- ============ NAVBAR ============ -->
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-beige">
+  <nav class="max-w-7xl mx-auto px-4 flex items-center justify-between h-20">
+    <a href="#" class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-full bg-cinnamon flex items-center justify-center text-cream font-bold text-lg">OK</div>
+      <div class="leading-tight">
+        <p class="font-extrabold text-lg tracking-tight">Optik Kayumanis</p>
+        <p class="text-[10px] uppercase tracking-widest text-warmgray">Eyewear &amp; Eyecare</p>
+      </div>
+    </a>
+
+    <ul class="hidden lg:flex items-center gap-8 text-sm font-medium">
+      <li><a href="#home" class="hover:text-cinnamon transition">Home</a></li>
+      <li><a href="#katalog" class="hover:text-cinnamon transition">Katalog Produk</a></li>
+      <li><a href="#layanan" class="hover:text-cinnamon transition">Layanan Periksa Mata</a></li>
+      <li><a href="#tentang" class="hover:text-cinnamon transition">Tentang Kami</a></li>
+      <li><a href="#kontak" class="hover:text-cinnamon transition">Kontak / Lokasi</a></li>
+    </ul>
+
+    <div class="hidden lg:flex items-center gap-3">
+      <a href="#" class="text-sm font-semibold px-4 py-2 rounded-full border border-charcoal/20 hover:border-cinnamon hover:text-cinnamon transition">Masuk</a>
+      <a href="https://wa.me/6281234567890" target="_blank" class="text-sm font-semibold px-4 py-2 rounded-full bg-cinnamon text-cream hover:bg-cinnamon-dark transition flex items-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C22 6.45 17.5 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.26-8.24 2.21 0 4.28.86 5.84 2.42a8.18 8.18 0 0 1 2.42 5.83c0 4.55-3.71 8.23-8.27 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.7-.81-.23-.08-.4-.12-.56.13-.17.25-.65.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.43-.06-.13-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31s-.88.86-.88 2.1.9 2.44 1.02 2.61c.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29z"/></svg>
+        Chat WhatsApp
+      </a>
+    </div>
+
+    <button id="menuBtn" class="lg:hidden p-2" aria-label="Buka menu">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="hidden lg:hidden border-t border-beige bg-cream px-4 pb-4">
+    <ul class="flex flex-col gap-1 pt-2 text-sm font-medium">
+      <li><a href="#home" class="block py-2">Home</a></li>
+      <li><a href="#katalog" class="block py-2">Katalog Produk</a></li>
+      <li><a href="#layanan" class="block py-2">Layanan Periksa Mata</a></li>
+      <li><a href="#tentang" class="block py-2">Tentang Kami</a></li>
+      <li><a href="#kontak" class="block py-2">Kontak / Lokasi</a></li>
+      <li class="pt-2 flex gap-2">
+        <a href="#" class="flex-1 text-center py-2 rounded-full border border-charcoal/20 text-sm font-semibold">Masuk</a>
+        <a href="https://wa.me/6281234567890" class="flex-1 text-center py-2 rounded-full bg-cinnamon text-cream text-sm font-semibold">WhatsApp</a>
+      </li>
+    </ul>
+  </div>
+</header>
+
+<!-- ============ HERO CAROUSEL ============ -->
+<section id="home" class="relative overflow-hidden">
+  <div id="heroSlides" class="relative h-[520px] sm:h-[600px]">
+
+    <div class="hero-slide fade-slide absolute inset-0" style="background:linear-gradient(120deg,#4A2E1E 0%,#8B5E3C 60%,#A8794F 100%)">
+      <div class="max-w-7xl mx-auto h-full px-4 flex items-center">
+        <div class="max-w-xl text-cream">
+          <span class="inline-block text-xs uppercase tracking-widest bg-cream/15 px-3 py-1 rounded-full mb-4">Koleksi Terbaru 2026</span>
+          <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">Lihat Dunia Lebih Jernih, Tampil Lebih Percaya Diri</h1>
+          <p class="text-cream/85 mb-8">Frame premium, lensa berkualitas, dan pemeriksaan mata akurat — semua dalam satu tempat terpercaya untuk keluarga Anda.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="#katalog" class="px-6 py-3 rounded-full bg-cream text-cinnamon-dark font-semibold hover:bg-cream/90 transition">Lihat Koleksi</a>
+            <a href="#layanan" class="px-6 py-3 rounded-full border border-cream/40 text-cream font-semibold hover:bg-cream/10 transition">Jadwalkan Periksa Mata</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-slide fade-slide absolute inset-0 opacity-0" style="background:linear-gradient(120deg,#2A2622 0%,#7A756D 60%,#8B5E3C 100%)">
+      <div class="max-w-7xl mx-auto h-full px-4 flex items-center">
+        <div class="max-w-xl text-cream">
+          <span class="inline-block text-xs uppercase tracking-widest bg-cream/15 px-3 py-1 rounded-full mb-4">Promo Bulan Ini</span>
+          <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">Gratis Lensa Anti Radiasi untuk Pembelian Frame Pilihan</h1>
+          <p class="text-cream/85 mb-8">Nikmati penglihatan nyaman sepanjang hari dengan lensa berkualitas tinggi dari mitra terpercaya kami.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="#katalog" class="px-6 py-3 rounded-full bg-cream text-cinnamon-dark font-semibold hover:bg-cream/90 transition">Lihat Koleksi</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-slide fade-slide absolute inset-0 opacity-0" style="background:linear-gradient(120deg,#6E8B63 0%,#4A2E1E 70%,#2A2622 100%)">
+      <div class="max-w-7xl mx-auto h-full px-4 flex items-center">
+        <div class="max-w-xl text-cream">
+          <span class="inline-block text-xs uppercase tracking-widest bg-cream/15 px-3 py-1 rounded-full mb-4">Layanan Klinis</span>
+          <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">Periksa Mata Akurat Bersama Optometris Berpengalaman</h1>
+          <p class="text-cream/85 mb-8">Pemeriksaan refraksi komputerisasi untuk hasil resep kacamata yang tepat.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="#layanan" class="px-6 py-3 rounded-full bg-cream text-cinnamon-dark font-semibold hover:bg-cream/90 transition">Jadwalkan Periksa Mata</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2" id="heroDots"></div>
+</section>
+
+<!-- ============ TRUST MARQUEE ============ -->
+<div class="bg-cinnamon-dark text-cream/90 py-3 overflow-hidden whitespace-nowrap">
+  <div class="marquee-track inline-flex gap-10 text-sm font-medium">
+    <span>★ Lensa Premium Bergaransi</span><span>•</span>
+    <span>Pemeriksaan Refraksi Akurat</span><span>•</span>
+    <span>Garansi Frame Resmi</span><span>•</span>
+    <span>Konsultasi via WhatsApp</span><span>•</span>
+    <span>★ Lensa Premium Bergaransi</span><span>•</span>
+    <span>Pemeriksaan Refraksi Akurat</span><span>•</span>
+    <span>Garansi Frame Resmi</span><span>•</span>
+    <span>Konsultasi via WhatsApp</span><span>•</span>
+  </div>
+</div>
+
+<!-- ============ VALUE PROPOSITION ============ -->
+<section class="max-w-7xl mx-auto px-4 py-20">
+  <div class="text-center max-w-2xl mx-auto mb-14">
+    <p class="text-cinnamon font-semibold uppercase tracking-widest text-xs mb-2">Kenapa Optik Kayumanis</p>
+    <h2 class="text-3xl sm:text-4xl font-extrabold">Kepercayaan yang Terlihat dari Setiap Detail</h2>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-cream-card p-6 rounded-2xl border border-beige hover:shadow-lg hover:-translate-y-1 transition">
+      <div class="w-12 h-12 rounded-xl bg-cinnamon/10 flex items-center justify-center text-cinnamon mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9" stroke-width="1.5"/></svg>
+      </div>
+      <h3 class="font-bold mb-1">Lensa Premium</h3>
+      <p class="text-sm text-warmgray">Bekerja sama dengan brand lensa terpercaya untuk hasil optimal dan tahan lama.</p>
+    </div>
+    <div class="bg-cream-card p-6 rounded-2xl border border-beige hover:shadow-lg hover:-translate-y-1 transition">
+      <div class="w-12 h-12 rounded-xl bg-cinnamon/10 flex items-center justify-center text-cinnamon mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12s3.6-6 9-6 9 6 9 6-3.6 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.5" stroke-width="1.5"/></svg>
+      </div>
+      <h3 class="font-bold mb-1">Pemeriksaan Komputer Akurat</h3>
+      <p class="text-sm text-warmgray">Alat refraksi digital untuk resep kacamata yang presisi sesuai kondisi mata Anda.</p>
+    </div>
+    <div class="bg-cream-card p-6 rounded-2xl border border-beige hover:shadow-lg hover:-translate-y-1 transition">
+      <div class="w-12 h-12 rounded-xl bg-cinnamon/10 flex items-center justify-center text-cinnamon mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/></svg>
+      </div>
+      <h3 class="font-bold mb-1">Garansi Frame</h3>
+      <p class="text-sm text-warmgray">Setiap pembelian frame dilengkapi garansi resmi dan layanan purna jual.</p>
+    </div>
+    <div class="bg-cream-card p-6 rounded-2xl border border-beige hover:shadow-lg hover:-translate-y-1 transition">
+      <div class="w-12 h-12 rounded-xl bg-cinnamon/10 flex items-center justify-center text-cinnamon mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 1 1 8.5-8.5Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h6M8 9h4"/></svg>
+      </div>
+      <h3 class="font-bold mb-1">Konsultasi Cepat</h3>
+      <p class="text-sm text-warmgray">Tim kami siap membantu lewat WhatsApp untuk rekomendasi dan pemesanan.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ KATALOG / KATEGORI ============ -->
+<section id="katalog" class="max-w-7xl mx-auto px-4 py-20">
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+    <div>
+      <p class="text-cinnamon font-semibold uppercase tracking-widest text-xs mb-2">Katalog Produk</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold">Temukan Gaya yang Cocok untuk Anda</h2>
+    </div>
+    <a href="#" class="text-sm font-semibold text-cinnamon hover:underline whitespace-nowrap">Lihat Semua Produk →</a>
+  </div>
+
+  <!-- Category grid -->
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-14">
+    <a href="#" class="group relative rounded-2xl overflow-hidden h-64" style="background:linear-gradient(160deg,#4A2E1E,#8B5E3C)">
+      <div class="absolute inset-0 flex flex-col justify-end p-5">
+        <h3 class="text-cream font-bold text-lg">Kacamata Pria</h3>
+        <p class="text-cream/70 text-xs">Tegas &amp; profesional</p>
+      </div>
+    </a>
+    <a href="#" class="group relative rounded-2xl overflow-hidden h-64" style="background:linear-gradient(160deg,#A8794F,#E4D8C8)">
+      <div class="absolute inset-0 flex flex-col justify-end p-5">
+        <h3 class="text-charcoal font-bold text-lg">Kacamata Wanita</h3>
+        <p class="text-charcoal/60 text-xs">Elegan &amp; modern</p>
+      </div>
+    </a>
+    <a href="#" class="group relative rounded-2xl overflow-hidden h-64" style="background:linear-gradient(160deg,#6E8B63,#8B5E3C)">
+      <div class="absolute inset-0 flex flex-col justify-end p-5">
+        <h3 class="text-cream font-bold text-lg">Kacamata Anak</h3>
+        <p class="text-cream/70 text-xs">Ringan &amp; berwarna</p>
+      </div>
+    </a>
+    <a href="#" class="group relative rounded-2xl overflow-hidden h-64" style="background:linear-gradient(160deg,#2A2622,#7A756D)">
+      <div class="absolute inset-0 flex flex-col justify-end p-5">
+        <h3 class="text-cream font-bold text-lg">Lensa Kontak</h3>
+        <p class="text-cream/70 text-xs">Nyaman seharian</p>
+      </div>
+    </a>
+  </div>
+
+  <!-- Product filter -->
+  <div class="flex flex-wrap items-center gap-3 mb-8">
+    <span class="text-sm font-semibold text-warmgray">Filter tipe frame:</span>
+    <button class="filter-btn active px-4 py-1.5 rounded-full border border-beige text-sm font-medium transition" data-filter="all">Semua</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full border border-beige text-sm font-medium transition" data-filter="full-rim">Full Rim</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full border border-beige text-sm font-medium transition" data-filter="half-rim">Half Rim</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full border border-beige text-sm font-medium transition" data-filter="frameless">Frameless</button>
+  </div>
+
+  <!-- Product grid -->
+  <div id="productGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+</section>
+
+<!-- ============ LAYANAN PERIKSA MATA ============ -->
+<section id="layanan" class="bg-cinnamon-dark text-cream">
+  <div class="max-w-7xl mx-auto px-4 py-20 grid lg:grid-cols-2 gap-10 items-center">
+    <div>
+      <p class="text-cream/60 font-semibold uppercase tracking-widest text-xs mb-2">Layanan Spesial</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold mb-5">Periksa Mata Refraksi Klinis, Gratis untuk Setiap Pembelian</h2>
+      <p class="text-cream/80 mb-8">Optometris berpengalaman kami menggunakan alat digital modern untuk mengukur kondisi mata Anda secara akurat — mulai dari minus, silinder, hingga plus. Hasil pemeriksaan langsung digunakan untuk merekomendasikan lensa yang paling sesuai.</p>
+      <ul class="space-y-3 mb-8 text-sm">
+        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-cream"></span> Pemeriksaan refraksi komputerisasi</li>
+        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-cream"></span> Konsultasi pemilihan lensa sesuai aktivitas</li>
+        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-cream"></span> Estimasi waktu pemeriksaan 15–20 menit</li>
+      </ul>
+      <a href="https://wa.me/6281234567890" class="inline-block px-6 py-3 rounded-full bg-cream text-cinnamon-dark font-semibold hover:bg-cream/90 transition">Jadwalkan via WhatsApp</a>
+    </div>
+    <div class="aspect-[4/3] rounded-2xl" style="background:linear-gradient(160deg,#A8794F,#2A2622)"></div>
+  </div>
+</section>
+
+<!-- ============ TENTANG KAMI ============ -->
+<section id="tentang" class="max-w-7xl mx-auto px-4 py-20 grid lg:grid-cols-2 gap-10 items-center">
+  <div class="aspect-[4/3] rounded-2xl order-2 lg:order-1" style="background:linear-gradient(160deg,#E4D8C8,#8B5E3C)"></div>
+  <div class="order-1 lg:order-2">
+    <p class="text-cinnamon font-semibold uppercase tracking-widest text-xs mb-2">Tentang Kami</p>
+    <h2 class="text-3xl sm:text-4xl font-extrabold mb-5">Optik Terpercaya untuk Keluarga Indonesia</h2>
+    <p class="text-warmgray mb-6">Optik Kayumanis hadir untuk memberikan pengalaman berbelanja kacamata yang hangat, personal, dan profesional — menggabungkan kualitas produk premium dengan pelayanan pemeriksaan mata yang akurat.</p>
+    <div class="grid grid-cols-3 gap-4 text-center">
+      <div><p class="text-2xl font-extrabold text-cinnamon">10+</p><p class="text-xs text-warmgray">Tahun Berpengalaman</p></div>
+      <div><p class="text-2xl font-extrabold text-cinnamon">15K+</p><p class="text-xs text-warmgray">Pelanggan Puas</p></div>
+      <div><p class="text-2xl font-extrabold text-cinnamon">50+</p><p class="text-xs text-warmgray">Merek Frame</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer id="kontak" class="bg-charcoal text-cream/80">
+  <div class="max-w-7xl mx-auto px-4 py-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
+    <div>
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-9 h-9 rounded-full bg-cinnamon flex items-center justify-center text-cream font-bold">OK</div>
+        <p class="font-extrabold text-cream">Optik Kayumanis</p>
+      </div>
+      <p class="text-sm mb-4">Kacamata &amp; lensa kontak premium, dengan layanan periksa mata profesional.</p>
+      <div class="flex gap-3">
+        <a href="#" class="w-9 h-9 rounded-full bg-cream/10 flex items-center justify-center hover:bg-cinnamon transition">IG</a>
+        <a href="#" class="w-9 h-9 rounded-full bg-cream/10 flex items-center justify-center hover:bg-cinnamon transition">FB</a>
+        <a href="#" class="w-9 h-9 rounded-full bg-cream/10 flex items-center justify-center hover:bg-cinnamon transition">TT</a>
+      </div>
+    </div>
+    <div>
+      <p class="font-bold text-cream mb-4">Navigasi</p>
+      <ul class="space-y-2 text-sm">
+        <li><a href="#home" class="hover:text-cinnamon">Home</a></li>
+        <li><a href="#katalog" class="hover:text-cinnamon">Katalog Produk</a></li>
+        <li><a href="#layanan" class="hover:text-cinnamon">Layanan Periksa Mata</a></li>
+        <li><a href="#tentang" class="hover:text-cinnamon">Tentang Kami</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-bold text-cream mb-4">Jam Operasional</p>
+      <ul class="space-y-2 text-sm">
+        <li>Senin – Jumat: 09.00 – 20.00</li>
+        <li>Sabtu – Minggu: 10.00 – 18.00</li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-bold text-cream mb-4">Lokasi</p>
+      <p class="text-sm mb-3">Jl. Kayumanis No. 12, Bogor, Jawa Barat</p>
+      <div class="aspect-video rounded-xl bg-cream/10 flex items-center justify-center text-xs text-cream/50">Peta Lokasi</div>
+    </div>
+  </div>
+  <div class="border-t border-cream/10 py-5 text-center text-xs text-cream/50">
+    © 2026 Optik Kayumanis. Seluruh hak cipta dilindungi.
+  </div>
+</footer>
+
+<!-- Floating WhatsApp button -->
+<a href="https://wa.me/6281234567890" target="_blank" class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-sage flex items-center justify-center shadow-lg hover:scale-110 transition" aria-label="Chat WhatsApp">
+  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C22 6.45 17.5 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.26-8.24 2.21 0 4.28.86 5.84 2.42a8.18 8.18 0 0 1 2.42 5.83c0 4.55-3.71 8.23-8.27 8.23z"/></svg>
+</a>
+
+<script>
+// ---------- Mobile menu toggle ----------
+const menuBtn = document.getElementById('menuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+// ---------- Hero carousel ----------
+const slides = document.querySelectorAll('.hero-slide');
+const dotsWrap = document.getElementById('heroDots');
+let current = 0;
+
+slides.forEach((_, i) => {
+  const dot = document.createElement('button');
+  dot.className = 'w-2.5 h-2.5 rounded-full bg-cream/50 transition';
+  dot.addEventListener('click', () => showSlide(i));
+  dotsWrap.appendChild(dot);
+});
+
+function showSlide(index) {
+  slides.forEach((s, i) => s.style.opacity = i === index ? '1' : '0');
+  dotsWrap.querySelectorAll('button').forEach((d, i) => {
+    d.className = 'w-2.5 h-2.5 rounded-full transition ' + (i === index ? 'bg-cream' : 'bg-cream/50');
+  });
+  current = index;
+}
+showSlide(0);
+setInterval(() => showSlide((current + 1) % slides.length), 5000);
+
+// ---------- Product data + filter ----------
+const products = [
+  { name: 'Kayu Classic Round', price: 'Rp 850.000', type: 'full-rim', badge: 'Best Seller' },
+  { name: 'Manis Half Metal', price: 'Rp 750.000', type: 'half-rim', badge: null },
+  { name: 'Kayu Aire Frameless', price: 'Rp 950.000', type: 'frameless', badge: 'Baru' },
+  { name: 'Kayu Bold Square', price: 'Rp 820.000', type: 'full-rim', badge: null },
+  { name: 'Manis Slim Half', price: 'Rp 690.000', type: 'half-rim', badge: null },
+  { name: 'Kayu Featherlight', price: 'Rp 990.000', type: 'frameless', badge: null },
+  { name: 'Kayu Heritage Round', price: 'Rp 880.000', type: 'full-rim', badge: null },
+  { name: 'Manis Clip Half', price: 'Rp 720.000', type: 'half-rim', badge: 'Diskon' },
+];
+
+const grid = document.getElementById('productGrid');
+
+function renderProducts(filter) {
+  grid.innerHTML = '';
+  products
+    .filter(p => filter === 'all' || p.type === filter)
+    .forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'group bg-cream-card rounded-2xl border border-beige overflow-hidden hover:shadow-lg transition';
+      card.innerHTML = `
+        <div class="aspect-square relative" style="background:linear-gradient(160deg,#E4D8C8,#A8794F)">
+          ${p.badge ? `<span class="absolute top-3 left-3 bg-cinnamon text-cream text-[10px] font-bold uppercase px-2 py-1 rounded-full">${p.badge}</span>` : ''}
+        </div>
+        <div class="p-4">
+          <p class="font-semibold text-sm mb-1">${p.name}</p>
+          <p class="text-cinnamon font-bold text-sm mb-3">${p.price}</p>
+          <button class="w-full text-xs font-semibold py-2 rounded-full border border-charcoal/20 group-hover:bg-cinnamon group-hover:text-cream group-hover:border-cinnamon transition">Lihat Detail</button>
+        </div>`;
+      grid.appendChild(card);
+    });
+}
+renderProducts('all');
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderProducts(btn.dataset.filter);
+  });
+});
+</script>
+</body>
+</html>
