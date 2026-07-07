@@ -132,9 +132,15 @@ model OrderItem {
 }
 
 model License {
-  id         Int      @id @default(autoincrement())
-  tokenCode  String   @unique
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  expiredAt  DateTime
+  id               Int       @id @default(autoincrement())
+  // Hash (SHA-256) dari token konfirmasi yang sedang berlaku.
+  // Token plaintext HANYA ditampilkan sekali saat digenerate, tidak pernah disimpan mentah.
+  tokenCode        String?   @unique
+  // Kapan token konfirmasi terakhir digenerate — dipakai untuk membatasi masa berlaku token (mis. 15 menit)
+  tokenGeneratedAt DateTime?
+  // Token konfirmasi hanya boleh dipakai sekali; setelah dipakai untuk /activate, harus generate baru
+  tokenUsed        Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  expiredAt        DateTime
 }
