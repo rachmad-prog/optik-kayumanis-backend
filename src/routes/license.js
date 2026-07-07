@@ -110,6 +110,11 @@ router.post("/activate", requireAuth, restrictTo("DIREKTUR"), async (req, res) =
       });
     }
 
+    // Input dari form datetime-local di browser: "2026-07-07T12:55" (tanpa timezone info)
+    // JavaScript Date() menganggap ini sebagai UTC, padahal seharusnya WIB (UTC+7)
+    // Solusi: parse sebagai WIB, lalu konversi ke UTC untuk disimpan di database
+    
+    // WIB adalah UTC+7, jadi kita kurangi 7 jam dari waktu yang dimaksud
     const targetExpired = new Date(customExpiredAt);
     if (isNaN(targetExpired.getTime())) {
       return res.status(400).json({
@@ -117,6 +122,11 @@ router.post("/activate", requireAuth, restrictTo("DIREKTUR"), async (req, res) =
         message: "Format pilihan tanggal/waktu tidak valid.",
       });
     }
+    
+    // Kurangi 7 jam (WIB offset) karena Date() menganggap input sebagai UTC
+    // Ini memastikan 12:55 WIB diinterpretasi sebagai 12:55 WIB, bukan 12:55 UTC
+    const wibOffsetMs = 7 * 60 * 60 * 1000; // 7 jam dalam millisecond
+    const targetExpiredInUTC = new Date(targetExpired.getTime() - wibOffsetMs);
 
     const license = await getOrCreateLicense();
 
@@ -144,16 +154,18 @@ router.post("/activate", requireAuth, restrictTo("DIREKTUR"), async (req, res) =
     }
 
     // Token cocok -> update masa aktif, dan langsung "bakar" token ini supaya tidak bisa dipakai ulang.
+    // Gunakan targetExpiredInUTC yang sudah dikalibrasi timezone
     await prisma.license.update({
       where: { id: license.id },
       data: {
         isActive: true,
-        expiredAt: targetExpired,
+        expiredAt: targetExpiredInUTC,
         tokenUsed: true,
       },
     });
 
-    const waktuLokalFormat = targetExpired.toLocaleDateString("id-ID", {
+    // Tampilkan waktu dalam format WIB untuk konfirmasi user
+    const waktuLokalFormat = targetExpiredInUTC.toLocaleDateString("id-ID", {
       year: "numeric",
       month: "long",
       day: "numeric",
