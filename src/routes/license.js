@@ -26,6 +26,23 @@ async function getOrCreateLicense() {
   return license;
 }
 
+// GET /api/license/public-status
+// TANPA AUTH — dipanggil oleh middleware Next.js di frontend untuk memutuskan apakah
+// halaman publik (home, shop, produk, checkout, dll) harus ditampilkan atau diblokir.
+// Sengaja hanya mengembalikan boolean (tidak ada tanggal/detail lain) supaya tidak
+// membocorkan informasi internal ke publik.
+router.get("/public-status", async (req, res) => {
+  try {
+    const license = await getOrCreateLicense();
+    const isExpired = new Date() > new Date(license.expiredAt);
+    return res.json({ isBlocked: isExpired || !license.isActive });
+  } catch (error) {
+    console.error("Error cek status lisensi publik:", error);
+    // Kalau DB error, jangan sampai seluruh website ikut down gara-gara ini — fail open.
+    return res.json({ isBlocked: false });
+  }
+});
+
 // GET /api/license/status
 // Dipakai frontend admin (ADMIN & DIREKTUR) untuk menampilkan banner peringatan
 // TANPA memblokir akses mereka ke fitur admin lainnya.
