@@ -168,4 +168,64 @@ async function sendOrderInvoiceNotifications(order, user) {
   ]);
 }
 
-module.exports = { sendOrderInvoiceNotifications };
+// ---------------------------------------------------------------------
+// NOTIFIKASI LISENSI KADALUARSA — dikirim ke semua user berrole DIREKTUR
+// saat backend mendeteksi masa aktif website sudah habis.
+// Dipanggil dari middleware/checkLicense.js, HANYA SEKALI per periode
+// kadaluarsa (lihat logic expiryNotifiedAt di checkLicense.js).
+// ---------------------------------------------------------------------
+async function sendLicenseExpiredNotification(direkturEmails, expiredAt) {
+  if (
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS
+  ) {
+    console.warn(
+      "[notify] SMTP belum dikonfigurasi di .env — notifikasi lisensi kadaluarsa dilewati.",
+    );
+    return;
+  }
+  if (!direkturEmails || direkturEmails.length === 0) {
+    console.warn(
+      "[notify] Tidak ada akun DIREKTUR dengan email terdaftar — notifikasi lisensi dilewati.",
+    );
+    return;
+  }
+
+  const waktu = new Date(expiredAt).toLocaleString("id-ID", {
+    dateStyle: "full",
+    timeStyle: "short",
+  });
+
+  const text = `Halo,
+
+Masa aktif lisensi website Optik Kayumanis telah berakhir pada ${waktu} WIB.
+
+Akses publik (produk, gambar, checkout, dll) untuk pengunjung website SUDAH OTOMATIS DIBLOKIR
+mulai saat ini. Panel admin masih bisa diakses seperti biasa oleh Direktur/Admin.
+
+Silakan login ke panel admin dan buka menu "Lisensi Sistem" untuk generate token baru dan
+memperpanjang masa aktif website.
+
+— Sistem Optik Kayumanis (notifikasi otomatis)`;
+
+  try {
+    await getTransporter().sendMail({
+      from:
+        process.env.SMTP_FROM || `"Optik Kayumanis" <${process.env.SMTP_USER}>`,
+      to: direkturEmails.join(","),
+      subject: "⚠️ Lisensi Website Optik Kayumanis Telah Kadaluarsa",
+      text,
+    });
+    console.log(
+      `[notify] Email peringatan lisensi kadaluarsa terkirim ke: ${direkturEmails.join(", ")}`,
+    );
+  } catch (err) {
+    console.error(
+      "[notify] Gagal mengirim email peringatan lisensi kadaluarsa:",
+      err.message,
+    );
+  }
+}
+
+module.exports = { sendOrderInvoiceNotifications, sendLicenseExpiredNotification };

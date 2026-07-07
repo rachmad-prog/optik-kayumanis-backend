@@ -143,4 +143,8 @@ model License {
   isActive         Boolean   @default(true)
   createdAt        DateTime  @default(now())
   expiredAt        DateTime
+  // Kapan notifikasi "lisensi kadaluarsa" terakhir dikirim ke Direktur.
+  // Dibandingkan dengan expiredAt supaya notifikasi hanya dikirim SEKALI per periode kadaluarsa,
+  // bukan berulang setiap ada request yang kena blokir.
+  expiryNotifiedAt DateTime?
 }
