@@ -1,17 +1,17 @@
-const prisma = require("../config/db");
+﻿const prisma = require("../config/db");
 
-// Fallback content — used the first time (before any admin edit) and merged
+// Fallback content â€” used the first time (before any admin edit) and merged
 // under whatever the admin has saved, so partial edits never break the shape.
 const DEFAULT_CONTENT = {
   hero: {
     topbarLeft: "Periksa Mata Gratis di Setiap Pembelian Frame + Lensa",
-    topbarRight: "Buka Setiap Hari · 09.00 – 20.00 WIB",
+    topbarRight: "Buka Setiap Hari Â· 09.00 â€“ 20.00 WIB",
     slides: [
       {
         image: "",
         tag: "Koleksi Terbaru 2026",
         title: "Lihat Dunia Lebih Jernih, Tampil Lebih Percaya Diri",
-        desc: "Frame premium, lensa berkualitas, dan pemeriksaan mata akurat — semua dalam satu tempat terpercaya untuk keluarga Anda.",
+        desc: "Frame premium, lensa berkualitas, dan pemeriksaan mata akurat â€” semua dalam satu tempat terpercaya untuk keluarga Anda.",
         ctaPrimaryLabel: "Lihat Koleksi",
         ctaPrimaryHref: "/shop",
         ctaSecondaryLabel: "Jadwalkan Periksa Mata",
@@ -40,7 +40,7 @@ const DEFAULT_CONTENT = {
     ],
   },
   marquee: [
-    "★ Lensa Premium Bergaransi",
+    "â˜… Lensa Premium Bergaransi",
     "Pemeriksaan Refraksi Akurat",
     "Garansi Frame Resmi",
     "Konsultasi via WhatsApp",
@@ -64,11 +64,11 @@ const DEFAULT_CONTENT = {
     eyebrow: "Layanan Spesial",
     title: "Periksa Mata Refraksi Klinis, Gratis untuk Setiap Pembelian",
     description:
-      "Optometris berpengalaman kami menggunakan alat digital modern untuk mengukur kondisi mata Anda secara akurat — mulai dari minus, silinder, hingga plus. Hasil pemeriksaan langsung digunakan untuk merekomendasikan lensa yang paling sesuai.",
+      "Optometris berpengalaman kami menggunakan alat digital modern untuk mengukur kondisi mata Anda secara akurat â€” mulai dari minus, silinder, hingga plus. Hasil pemeriksaan langsung digunakan untuk merekomendasikan lensa yang paling sesuai.",
     bullets: [
       "Pemeriksaan refraksi komputerisasi",
       "Konsultasi pemilihan lensa sesuai aktivitas",
-      "Estimasi waktu pemeriksaan 15–20 menit",
+      "Estimasi waktu pemeriksaan 15â€“20 menit",
     ],
     ctaLabel: "Jadwalkan via WhatsApp",
     media: "",
@@ -77,7 +77,7 @@ const DEFAULT_CONTENT = {
     eyebrow: "Tentang Kami",
     title: "Optik Terpercaya untuk Keluarga Indonesia",
     description:
-      "Optik Kayumanis hadir untuk memberikan pengalaman berbelanja kacamata yang hangat, personal, dan profesional — menggabungkan kualitas produk premium dengan pelayanan pemeriksaan mata yang akurat.",
+      "Optik Kayumanis hadir untuk memberikan pengalaman berbelanja kacamata yang hangat, personal, dan profesional â€” menggabungkan kualitas produk premium dengan pelayanan pemeriksaan mata yang akurat.",
     stats: [
       { value: "10+", label: "Tahun Berpengalaman" },
       { value: "15K+", label: "Pelanggan Puas" },
@@ -85,40 +85,66 @@ const DEFAULT_CONTENT = {
     ],
     media: "",
   },
+  layananSlider: {
+    title: "Layanan Optik Kayumanis",
+    subtitle: "Pilih layanan optik yang nyaman untuk kebutuhan mata keluarga Anda.",
+    items: [
+      {
+        title: "Pemeriksaan Mata",
+        desc: "Pemeriksaan refraksi dan konsultasi pemilihan lensa bersama tim Optik Kayumanis.",
+        image: "",
+      },
+      {
+        title: "Konsultasi Lensa",
+        desc: "Rekomendasi lensa sesuai aktivitas harian, pekerjaan, dan kebutuhan visual Anda.",
+        image: "",
+      },
+    ],
+  },
+  cabang: {
+    title: "Cabang Optik Kayumanis",
+    subtitle: "Kunjungi cabang Optik Kayumanis terdekat dan dapatkan layanan terbaik kami.",
+    ctaLabel: "Hubungi Cabang",
+    ctaHref: "https://wa.me/6281234567890",
+    items: [
+      {
+        title: "Optik Kayumanis Bogor",
+        desc: "Jl. Kayumanis No. 12, Bogor, Jawa Barat.",
+        image: "",
+      },
+    ],
+  },
+  sponsors: {
+    title: "Sponsor & Partner",
+    subtitle: "Didukung oleh partner pilihan Optik Kayumanis.",
+    items: [
+      { name: "Partner 1", image: "" },
+      { name: "Partner 2", image: "" },
+      { name: "Partner 3", image: "" },
+    ],
+  },
+  kontak: {
+    title: "Kontak Optik Kayumanis",
+    subtitle: "Kirim pertanyaan Anda, tim kami akan membantu secepatnya.",
+    image: "",
+  },
   footer: {
     description: "Kacamata & lensa kontak premium, dengan layanan periksa mata profesional.",
     whatsappDisplay: "0812-3456-7890",
     whatsappLink: "https://wa.me/6281234567890",
     email: "halo@optikkayumanis.com",
     address: "Jl. Kayumanis No. 12, Bogor, Jawa Barat",
-    hours: ["Senin – Jumat: 09.00 – 20.00", "Sabtu – Minggu: 10.00 – 18.00"],
+    hours: ["Senin â€“ Jumat: 09.00 â€“ 20.00", "Sabtu â€“ Minggu: 10.00 â€“ 18.00"],
     socials: { instagram: "#", facebook: "#", tiktok: "#" },
     mapEmbed: "",
     copyrightText: "Optik Kayumanis. Seluruh hak cipta dilindungi.",
   },
 };
 
-// Shallow-per-section deep merge: for every top-level key, if the saved data has
-// that key use it, otherwise fall back to default — keeps the shape complete even
-// after older/partial saves.
-function mergeContent(saved) {
-  if (!saved || typeof saved !== "object") return DEFAULT_CONTENT;
-  const merged = {};
-  for (const key of Object.keys(DEFAULT_CONTENT)) {
-    merged[key] = saved[key] !== undefined ? saved[key] : DEFAULT_CONTENT[key];
-  }
-  return merged;
-}
-
-async function getContent(req, res) {
-  const row = await prisma.siteContent.findUnique({ where: { id: "main" } });
-  res.json({ content: mergeContent(row?.data) });
-}
-
 // Deep merge for plain objects so partial/per-section saves (e.g. saving just
 // "Topbar" without touching "Hero slides", even though both live under the
 // same top-level "hero" key) never wipe out sibling data. Arrays and
-// primitives are replaced wholesale — only plain objects are merged deeper.
+// primitives are replaced wholesale â€” only plain objects are merged deeper.
 function isPlainObject(val) {
   return val !== null && typeof val === "object" && !Array.isArray(val);
 }
@@ -134,6 +160,16 @@ function deepMerge(target, source) {
     }
   }
   return result;
+}
+
+function mergeContent(saved) {
+  if (!saved || typeof saved !== "object") return DEFAULT_CONTENT;
+  return deepMerge(DEFAULT_CONTENT, saved);
+}
+
+async function getContent(req, res) {
+  const row = await prisma.siteContent.findUnique({ where: { id: "main" } });
+  res.json({ content: mergeContent(row?.data) });
 }
 
 async function updateContent(req, res) {
@@ -152,3 +188,4 @@ async function updateContent(req, res) {
 }
 
 module.exports = { getContent, updateContent, DEFAULT_CONTENT };
+
