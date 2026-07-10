@@ -1,4 +1,4 @@
-﻿const prisma = require("../config/db");
+const prisma = require("../config/db");
 
 // Fallback content â€” used the first time (before any admin edit) and merged
 // under whatever the admin has saved, so partial edits never break the shape.
@@ -71,6 +71,13 @@ const DEFAULT_CONTENT = {
       "Estimasi waktu pemeriksaan 15â€“20 menit",
     ],
     ctaLabel: "Jadwalkan via WhatsApp",
+    // Nomor WA khusus untuk tombol CTA section ini (terpisah dari nomor WA
+    // di Footer), supaya admin bisa lihat & atur jelas tombol ini ngelink
+    // ke nomor mana. Format bebas (mis. "6281234567890"), dirapikan otomatis
+    // di frontend saat membentuk link wa.me.
+    waNumber: "",
+    // Pesan otomatis yang sudah terisi saat chat WA terbuka dari tombol ini.
+    waMessage: "Halo, saya ingin menjadwalkan periksa mata.",
     media: "",
   },
   tentang: {
@@ -188,4 +195,3 @@ async function updateContent(req, res) {
 }
 
 module.exports = { getContent, updateContent, DEFAULT_CONTENT };
-
