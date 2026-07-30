@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿const prisma = require("../config/db");
 
 // Fallback content â€” used the first time (before any admin edit) and merged
@@ -216,3 +217,202 @@ async function updateContent(req, res) {
 }
 
 module.exports = { getContent, updateContent, DEFAULT_CONTENT };
+=======
+const prisma = require("../config/db");
+
+// Fallback content â€” used the first time (before any admin edit) and merged
+// under whatever the admin has saved, so partial edits never break the shape.
+const DEFAULT_CONTENT = {
+  hero: {
+    topbarLeft: "Periksa Mata Gratis di Setiap Pembelian Frame + Lensa",
+    topbarRight: "Buka Setiap Hari Â· 09.00 â€“ 20.00 WIB",
+    slides: [
+      {
+        image: "",
+        tag: "Koleksi Terbaru 2026",
+        title: "Lihat Dunia Lebih Jernih, Tampil Lebih Percaya Diri",
+        desc: "Frame premium, lensa berkualitas, dan pemeriksaan mata akurat â€” semua dalam satu tempat terpercaya untuk keluarga Anda.",
+        ctaPrimaryLabel: "Lihat Koleksi",
+        ctaPrimaryHref: "/shop",
+        ctaSecondaryLabel: "Jadwalkan Periksa Mata",
+        ctaSecondaryHref: "#layanan",
+      },
+      {
+        image: "",
+        tag: "Promo Bulan Ini",
+        title: "Gratis Lensa Anti Radiasi untuk Pembelian Frame Pilihan",
+        desc: "Nikmati penglihatan nyaman sepanjang hari dengan lensa berkualitas tinggi dari mitra terpercaya kami.",
+        ctaPrimaryLabel: "Lihat Koleksi",
+        ctaPrimaryHref: "/shop",
+        ctaSecondaryLabel: "",
+        ctaSecondaryHref: "",
+      },
+      {
+        image: "",
+        tag: "Layanan Klinis",
+        title: "Periksa Mata Akurat Bersama Optometris Berpengalaman",
+        desc: "Pemeriksaan refraksi komputerisasi untuk hasil resep kacamata yang tepat.",
+        ctaPrimaryLabel: "Jadwalkan Periksa Mata",
+        ctaPrimaryHref: "#layanan",
+        ctaSecondaryLabel: "",
+        ctaSecondaryHref: "",
+      },
+    ],
+  },
+  marquee: [
+    "â˜… Lensa Premium Bergaransi",
+    "Pemeriksaan Refraksi Akurat",
+    "Garansi Frame Resmi",
+    "Konsultasi via WhatsApp",
+  ],
+  valueProps: {
+    eyebrow: "Kenapa Optik Kayumanis",
+    title: "Kepercayaan yang Terlihat dari Setiap Detail",
+    items: [
+      { title: "Lensa Premium", desc: "Bekerja sama dengan brand lensa terpercaya untuk hasil optimal dan tahan lama." },
+      { title: "Pemeriksaan Komputer Akurat", desc: "Alat refraksi digital untuk resep kacamata yang presisi sesuai kondisi mata Anda." },
+      { title: "Garansi Frame", desc: "Setiap pembelian frame dilengkapi garansi resmi dan layanan purna jual." },
+      { title: "Konsultasi Cepat", desc: "Tim kami siap membantu lewat WhatsApp untuk rekomendasi dan pemesanan." },
+    ],
+  },
+  katalog: {
+    eyebrow: "Katalog Produk",
+    title: "Temukan Gaya yang Cocok untuk Anda",
+    linkLabel: "Lihat Semua Produk",
+  },
+  layanan: {
+    eyebrow: "Layanan Spesial",
+    title: "Periksa Mata Refraksi Klinis, Gratis untuk Setiap Pembelian",
+    description:
+      "Optometris berpengalaman kami menggunakan alat digital modern untuk mengukur kondisi mata Anda secara akurat â€” mulai dari minus, silinder, hingga plus. Hasil pemeriksaan langsung digunakan untuk merekomendasikan lensa yang paling sesuai.",
+    bullets: [
+      "Pemeriksaan refraksi komputerisasi",
+      "Konsultasi pemilihan lensa sesuai aktivitas",
+      "Estimasi waktu pemeriksaan 15â€“20 menit",
+    ],
+    ctaLabel: "Jadwalkan via WhatsApp",
+    // Nomor WA khusus untuk tombol CTA section ini (terpisah dari nomor WA
+    // di Footer), supaya admin bisa lihat & atur jelas tombol ini ngelink
+    // ke nomor mana. Format bebas (mis. "6281234567890"), dirapikan otomatis
+    // di frontend saat membentuk link wa.me.
+    waNumber: "",
+    // Pesan otomatis yang sudah terisi saat chat WA terbuka dari tombol ini.
+    waMessage: "Halo, saya ingin menjadwalkan periksa mata.",
+    media: "",
+  },
+  tentang: {
+    eyebrow: "Tentang Kami",
+    title: "Optik Terpercaya untuk Keluarga Indonesia",
+    description:
+      "Optik Kayumanis hadir untuk memberikan pengalaman berbelanja kacamata yang hangat, personal, dan profesional â€” menggabungkan kualitas produk premium dengan pelayanan pemeriksaan mata yang akurat.",
+    stats: [
+      { value: "10+", label: "Tahun Berpengalaman" },
+      { value: "15K+", label: "Pelanggan Puas" },
+      { value: "50+", label: "Merek Frame" },
+    ],
+    media: "",
+  },
+  layananSlider: {
+    title: "Layanan Optik Kayumanis",
+    subtitle: "Pilih layanan optik yang nyaman untuk kebutuhan mata keluarga Anda.",
+    items: [
+      {
+        title: "Pemeriksaan Mata",
+        desc: "Pemeriksaan refraksi dan konsultasi pemilihan lensa bersama tim Optik Kayumanis.",
+        image: "",
+      },
+      {
+        title: "Konsultasi Lensa",
+        desc: "Rekomendasi lensa sesuai aktivitas harian, pekerjaan, dan kebutuhan visual Anda.",
+        image: "",
+      },
+    ],
+  },
+  cabang: {
+    title: "Cabang Optik Kayumanis",
+    subtitle: "Kunjungi cabang Optik Kayumanis terdekat dan dapatkan layanan terbaik kami.",
+    ctaLabel: "Hubungi Cabang",
+    ctaHref: "https://wa.me/6281234567890",
+    items: [
+      {
+        title: "Optik Kayumanis Bogor",
+        desc: "Jl. Kayumanis No. 12, Bogor, Jawa Barat.",
+        image: "",
+      },
+    ],
+  },
+  sponsors: {
+    title: "Sponsor & Partner",
+    subtitle: "Didukung oleh partner pilihan Optik Kayumanis.",
+    items: [
+      { name: "Partner 1", image: "" },
+      { name: "Partner 2", image: "" },
+      { name: "Partner 3", image: "" },
+    ],
+  },
+  kontak: {
+    title: "Kontak Optik Kayumanis",
+    subtitle: "Kirim pertanyaan Anda, tim kami akan membantu secepatnya.",
+    image: "",
+  },
+  footer: {
+    description: "Kacamata & lensa kontak premium, dengan layanan periksa mata profesional.",
+    whatsappDisplay: "0812-3456-7890",
+    whatsappLink: "https://wa.me/6281234567890",
+    email: "halo@optikkayumanis.com",
+    address: "Jl. Kayumanis No. 12, Bogor, Jawa Barat",
+    hours: ["Senin â€“ Jumat: 09.00 â€“ 20.00", "Sabtu â€“ Minggu: 10.00 â€“ 18.00"],
+    socials: { instagram: "#", facebook: "#", tiktok: "#" },
+    mapEmbed: "",
+    copyrightText: "Optik Kayumanis. Seluruh hak cipta dilindungi.",
+  },
+};
+
+// Deep merge for plain objects so partial/per-section saves (e.g. saving just
+// "Topbar" without touching "Hero slides", even though both live under the
+// same top-level "hero" key) never wipe out sibling data. Arrays and
+// primitives are replaced wholesale â€” only plain objects are merged deeper.
+function isPlainObject(val) {
+  return val !== null && typeof val === "object" && !Array.isArray(val);
+}
+
+function deepMerge(target, source) {
+  if (!isPlainObject(source)) return source;
+  const result = { ...(isPlainObject(target) ? target : {}) };
+  for (const key of Object.keys(source)) {
+    if (isPlainObject(source[key]) && isPlainObject(target?.[key])) {
+      result[key] = deepMerge(target[key], source[key]);
+    } else {
+      result[key] = source[key];
+    }
+  }
+  return result;
+}
+
+function mergeContent(saved) {
+  if (!saved || typeof saved !== "object") return DEFAULT_CONTENT;
+  return deepMerge(DEFAULT_CONTENT, saved);
+}
+
+async function getContent(req, res) {
+  const row = await prisma.siteContent.findUnique({ where: { id: "main" } });
+  res.json({ content: mergeContent(row?.data) });
+}
+
+async function updateContent(req, res) {
+  const incoming = req.body || {};
+  const existing = await prisma.siteContent.findUnique({ where: { id: "main" } });
+  const currentData = existing?.data && typeof existing.data === "object" ? existing.data : {};
+  const nextData = deepMerge(currentData, incoming);
+
+  const row = await prisma.siteContent.upsert({
+    where: { id: "main" },
+    create: { id: "main", data: nextData },
+    update: { data: nextData },
+  });
+
+  res.json({ content: mergeContent(row.data) });
+}
+
+module.exports = { getContent, updateContent, DEFAULT_CONTENT };
+>>>>>>> 7f30115efac0c1ee65a2cf52e5bf5352d260a167
