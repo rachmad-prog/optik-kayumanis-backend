@@ -32,7 +32,7 @@ const app = express();
 // Ambil variabel dari .env
 const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",").map((o) => o.trim().replace(/\/$/, ""))
-  : ["http://localhost:3000"];
+  : ["https://optik-kayumanis-frontend.vercel.app"];
 
 app.use(
   cors({
@@ -82,12 +82,17 @@ app.use((err, req, res, next) => {
   console.error(err);
 
   if (err.code === "P2002") {
-    return res.status(409).json({ message: "Data sudah ada (duplikat), tidak bisa disimpan." });
+    return res
+      .status(409)
+      .json({ message: "Data sudah ada (duplikat), tidak bisa disimpan." });
   }
   if (err.code === "P2003") {
     return res
       .status(400)
-      .json({ message: "Data ini masih terhubung dengan data lain dan tidak bisa dihapus/diubah." });
+      .json({
+        message:
+          "Data ini masih terhubung dengan data lain dan tidak bisa dihapus/diubah.",
+      });
   }
   if (err.code === "P2025") {
     return res.status(404).json({ message: "Data tidak ditemukan." });
@@ -104,7 +109,9 @@ const PORT = process.env.PORT || 4000;
 // it does NOT run app.listen(). Only listen when running locally / on a normal Node host.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`Optik Kayumanis API berjalan di http://localhost:${PORT}`);
+    console.log(
+      `Optik Kayumanis API berjalan di https://optik-kayumanis-frontend.vercel.app:${PORT}`,
+    );
   });
 }
 
