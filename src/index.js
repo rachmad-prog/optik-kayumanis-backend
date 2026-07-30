@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("express-async-errors"); // patches Express 4 so async route handler errors reach the error middleware below, instead of hanging the request forever
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
@@ -23,14 +24,14 @@ const app = express();
 // app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 // app.use(
 //   cors({
-//     origin: process.env.CLIENT_URL || "http://localhost:3000",
+//     origin: process.env.CLIENT_URL || "http://localhost:3000/",
 //     credentials: true,
 //   }),
 // );
 
 // Ambil variabel dari .env
 const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(",")
+  ? process.env.CLIENT_URL.split(",").map((o) => o.trim().replace(/\/$/, ""))
   : ["http://localhost:3000"];
 
 app.use(
@@ -79,6 +80,19 @@ app.use((req, res) =>
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err);
+
+  if (err.code === "P2002") {
+    return res.status(409).json({ message: "Data sudah ada (duplikat), tidak bisa disimpan." });
+  }
+  if (err.code === "P2003") {
+    return res
+      .status(400)
+      .json({ message: "Data ini masih terhubung dengan data lain dan tidak bisa dihapus/diubah." });
+  }
+  if (err.code === "P2025") {
+    return res.status(404).json({ message: "Data tidak ditemukan." });
+  }
+
   res
     .status(err.status || 500)
     .json({ message: err.message || "Terjadi kesalahan pada server." });
@@ -90,10 +104,7 @@ const PORT = process.env.PORT || 4000;
 // it does NOT run app.listen(). Only listen when running locally / on a normal Node host.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(
-      `Optik Kayumanis API berjalan di https://optik-kayumanis-frontend.vercel.app:${PORT}`,
-      // `Optik Kayumanis API berjalan di http://localhost:${PORT}`,
-    );
+    console.log(`Optik Kayumanis API berjalan di http://localhost:${PORT}`);
   });
 }
 

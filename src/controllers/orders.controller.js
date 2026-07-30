@@ -62,35 +62,51 @@ async function checkout(req, res) {
   const total = subtotal + SHIPPING_COST;
   const orderNumber = generateOrderNumber();
 
+  let order;
   try {
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        userId: req.user.id,
-        subtotal,
-        shippingCost: SHIPPING_COST,
-        total,
-        recipientName,
-        phone,
-        shippingAddress,
-        city,
-        province,
-        postalCode,
-        items: { create: orderItemsData },
-      },
-      include: { items: true },
-    });
-
-    // Decrement stock
-    await Promise.all(
-      orderItemsData.map((item) =>
-        prisma.product.update({
-          where: { id: item.productId },
+    // Create the order and decrement stock atomically. The conditional
+    // updateMany (stock >= quantity) re-checks stock at the moment of the
+    // write, so two concurrent checkouts for the same low-stock product
+    // can no longer both pass the earlier findMany() snapshot check and
+    // both decrement past zero.
+    order = await prisma.$transaction(async (tx) => {
+      for (const item of orderItemsData) {
+        const result = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
           data: { stock: { decrement: item.quantity } },
-        })
-      )
-    );
+        });
+        if (result.count === 0) {
+          const product = products.find((p) => p.id === item.productId);
+          throw Object.assign(
+            new Error(`Stok ${product?.name || "produk"} tidak cukup.`),
+            { status: 400 }
+          );
+        }
+      }
+      return tx.order.create({
+        data: {
+          orderNumber,
+          userId: req.user.id,
+          subtotal,
+          shippingCost: SHIPPING_COST,
+          total,
+          recipientName,
+          phone,
+          shippingAddress,
+          city,
+          province,
+          postalCode,
+          items: { create: orderItemsData },
+        },
+        include: { items: true },
+      });
+    });
+  } catch (err) {
+    const status = err.status || 500;
+    return res.status(status).json({ message: err.message || "Gagal membuat pesanan." });
+  }
 
+  try {
     // Create Midtrans Snap transaction
     const transaction = await snap.createTransaction({
       transaction_details: {
@@ -129,6 +145,22 @@ async function checkout(req, res) {
 
     res.status(201).json({ order: updated, snapToken: transaction.token, redirectUrl: transaction.redirect_url });
   } catch (err) {
+    // Midtrans call failed after the order was already created and stock
+    // decremented — roll both back instead of leaving an orphaned order
+    // with no payment token and stock stuck decremented.
+    try {
+      await prisma.$transaction(async (tx) => {
+        for (const item of orderItemsData) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+        await tx.order.delete({ where: { id: order.id } });
+      });
+    } catch (rollbackErr) {
+      console.error("[checkout] Gagal rollback order setelah Midtrans error:", rollbackErr);
+    }
     const status = err.status || 500;
     res.status(status).json({ message: err.message || "Gagal membuat pesanan." });
   }
@@ -184,7 +216,7 @@ async function getOrder(req, res) {
     include: { items: true },
   });
   if (!order) return res.status(404).json({ message: "Pesanan tidak ditemukan." });
-  if (order.userId !== req.user.id && req.user.role !== "ADMIN") {
+  if (order.userId !== req.user.id && !["ADMIN", "DIREKTUR"].includes(req.user.role)) {
     return res.status(403).json({ message: "Tidak diizinkan." });
   }
   res.json({ order });

@@ -13,7 +13,7 @@ const { requireAuth, requireAdmin } = require("../middleware/auth");
 const checkLicense = require("../middleware/checkLicense");
 
 router.post("/checkout", requireAuth, checkLicense, checkout);
-router.post("/midtrans-notification", checkLicense, midtransNotification); // called by Midtrans server, no auth
+router.post("/midtrans-notification", midtransNotification); // called by Midtrans server, no auth, no license gate
 router.get("/me", requireAuth, checkLicense, myOrders);
 router.get(
   "/admin/all",

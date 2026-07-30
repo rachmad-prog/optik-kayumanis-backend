@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../config/db");
 const { sendLicenseExpiredNotification } = require("../utils/notify");
 
 // Kirim email peringatan ke semua DIREKTUR — HANYA SEKALI per periode kadaluarsa.

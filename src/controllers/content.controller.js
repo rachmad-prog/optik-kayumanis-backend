@@ -49,10 +49,22 @@ const DEFAULT_CONTENT = {
     eyebrow: "Kenapa Optik Kayumanis",
     title: "Kepercayaan yang Terlihat dari Setiap Detail",
     items: [
-      { title: "Lensa Premium", desc: "Bekerja sama dengan brand lensa terpercaya untuk hasil optimal dan tahan lama." },
-      { title: "Pemeriksaan Komputer Akurat", desc: "Alat refraksi digital untuk resep kacamata yang presisi sesuai kondisi mata Anda." },
-      { title: "Garansi Frame", desc: "Setiap pembelian frame dilengkapi garansi resmi dan layanan purna jual." },
-      { title: "Konsultasi Cepat", desc: "Tim kami siap membantu lewat WhatsApp untuk rekomendasi dan pemesanan." },
+      {
+        title: "Lensa Premium",
+        desc: "Bekerja sama dengan brand lensa terpercaya untuk hasil optimal dan tahan lama.",
+      },
+      {
+        title: "Pemeriksaan Komputer Akurat",
+        desc: "Alat refraksi digital untuk resep kacamata yang presisi sesuai kondisi mata Anda.",
+      },
+      {
+        title: "Garansi Frame",
+        desc: "Setiap pembelian frame dilengkapi garansi resmi dan layanan purna jual.",
+      },
+      {
+        title: "Konsultasi Cepat",
+        desc: "Tim kami siap membantu lewat WhatsApp untuk rekomendasi dan pemesanan.",
+      },
     ],
   },
   katalog: {
@@ -71,6 +83,13 @@ const DEFAULT_CONTENT = {
       "Estimasi waktu pemeriksaan 15â€“20 menit",
     ],
     ctaLabel: "Jadwalkan via WhatsApp",
+    // Nomor WA khusus untuk tombol CTA section ini (terpisah dari nomor WA
+    // di Footer), supaya admin bisa lihat & atur jelas tombol ini ngelink
+    // ke nomor mana. Format bebas (mis. "6281234567890"), dirapikan otomatis
+    // di frontend saat membentuk link wa.me.
+    waNumber: "",
+    // Pesan otomatis yang sudah terisi saat chat WA terbuka dari tombol ini.
+    waMessage: "Halo, saya ingin menjadwalkan periksa mata.",
     media: "",
   },
   tentang: {
@@ -87,7 +106,8 @@ const DEFAULT_CONTENT = {
   },
   layananSlider: {
     title: "Layanan Optik Kayumanis",
-    subtitle: "Pilih layanan optik yang nyaman untuk kebutuhan mata keluarga Anda.",
+    subtitle:
+      "Pilih layanan optik yang nyaman untuk kebutuhan mata keluarga Anda.",
     items: [
       {
         title: "Pemeriksaan Mata",
@@ -103,7 +123,8 @@ const DEFAULT_CONTENT = {
   },
   cabang: {
     title: "Cabang Optik Kayumanis",
-    subtitle: "Kunjungi cabang Optik Kayumanis terdekat dan dapatkan layanan terbaik kami.",
+    subtitle:
+      "Kunjungi cabang Optik Kayumanis terdekat dan dapatkan layanan terbaik kami.",
     ctaLabel: "Hubungi Cabang",
     ctaHref: "https://wa.me/6281234567890",
     items: [
@@ -129,12 +150,16 @@ const DEFAULT_CONTENT = {
     image: "",
   },
   footer: {
-    description: "Kacamata & lensa kontak premium, dengan layanan periksa mata profesional.",
+    description:
+      "Kacamata & lensa kontak premium, dengan layanan periksa mata profesional.",
     whatsappDisplay: "0812-3456-7890",
     whatsappLink: "https://wa.me/6281234567890",
     email: "halo@optikkayumanis.com",
     address: "Jl. Kayumanis No. 12, Bogor, Jawa Barat",
-    hours: ["Senin â€“ Jumat: 09.00 â€“ 20.00", "Sabtu â€“ Minggu: 10.00 â€“ 18.00"],
+    hours: [
+      "Senin â€“ Jumat: 09.00 â€“ 20.00",
+      "Sabtu â€“ Minggu: 10.00 â€“ 18.00",
+    ],
     socials: { instagram: "#", facebook: "#", tiktok: "#" },
     mapEmbed: "",
     copyrightText: "Optik Kayumanis. Seluruh hak cipta dilindungi.",
@@ -174,8 +199,11 @@ async function getContent(req, res) {
 
 async function updateContent(req, res) {
   const incoming = req.body || {};
-  const existing = await prisma.siteContent.findUnique({ where: { id: "main" } });
-  const currentData = existing?.data && typeof existing.data === "object" ? existing.data : {};
+  const existing = await prisma.siteContent.findUnique({
+    where: { id: "main" },
+  });
+  const currentData =
+    existing?.data && typeof existing.data === "object" ? existing.data : {};
   const nextData = deepMerge(currentData, incoming);
 
   const row = await prisma.siteContent.upsert({
@@ -188,4 +216,3 @@ async function updateContent(req, res) {
 }
 
 module.exports = { getContent, updateContent, DEFAULT_CONTENT };
-

@@ -19,7 +19,10 @@ const updateSchema = z.object({
   name: z.string().min(2, "Nama minimal 2 karakter").optional(),
   email: z.string().email("Email tidak valid").optional(),
   phone: z.string().optional(),
-  role: z.enum(["CUSTOMER", "ADMIN"]).optional(),
+  // DIREKTUR diizinkan di sini supaya update akun Direktur sendiri (mis. ganti password)
+  // tidak gagal validasi. Siapa yang boleh benar-benar MENGUBAH role ke DIREKTUR tetap
+  // dibatasi lewat pengecekan di updateUser() di bawah.
+  role: z.enum(["CUSTOMER", "ADMIN", "DIREKTUR"]).optional(),
   password: z.string().min(6, "Password minimal 6 karakter").optional(),
 });
 
@@ -55,6 +58,9 @@ async function listUsers(req, res) {
 async function getUser(req, res) {
   const user = await prisma.user.findUnique({ where: { id: req.params.id } });
   if (!user) return res.status(404).json({ message: "User tidak ditemukan." });
+  if (user.role === "DIREKTUR" && req.user.role !== "DIREKTUR") {
+    return res.status(404).json({ message: "User tidak ditemukan." });
+  }
   res.json({ user: toPublicUser(user) });
 }
 
@@ -84,9 +90,24 @@ async function updateUser(req, res) {
   }
   const { name, email, phone, role, password } = parsed.data;
 
-  // Prevent an admin from demoting themselves and getting locked out
-  if (req.user.id === req.params.id && role && role !== "ADMIN") {
+  const targetUser = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!targetUser) return res.status(404).json({ message: "User tidak ditemukan." });
+
+  // Prevent a user from changing their own role (would risk locking themselves out).
+  // Compare against their actual current role, not a hardcoded value, so this works
+  // for ADMIN and DIREKTUR alike — as long as the role field is left unchanged it's fine.
+  if (req.user.id === req.params.id && role && role !== targetUser.role) {
     return res.status(400).json({ message: "Tidak bisa mengubah role akun sendiri." });
+  }
+
+  // Only a DIREKTUR may edit another DIREKTUR account (plain ADMIN cannot)
+  if (targetUser.role === "DIREKTUR" && req.user.role !== "DIREKTUR") {
+    return res.status(403).json({ message: "Tidak diizinkan mengubah akun Direktur." });
+  }
+
+  // Only a DIREKTUR may assign the DIREKTUR role to anyone (prevents privilege escalation)
+  if (role === "DIREKTUR" && req.user.role !== "DIREKTUR") {
+    return res.status(403).json({ message: "Tidak diizinkan memberikan role Direktur." });
   }
 
   const data = {};
@@ -115,6 +136,11 @@ async function updateUser(req, res) {
 async function deleteUser(req, res) {
   if (req.user.id === req.params.id) {
     return res.status(400).json({ message: "Tidak bisa menghapus akun sendiri." });
+  }
+  const targetUser = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!targetUser) return res.status(404).json({ message: "User tidak ditemukan." });
+  if (targetUser.role === "DIREKTUR" && req.user.role !== "DIREKTUR") {
+    return res.status(403).json({ message: "Tidak diizinkan menghapus akun Direktur." });
   }
   const ordersCount = await prisma.order.count({ where: { userId: req.params.id } });
   if (ordersCount > 0) {
