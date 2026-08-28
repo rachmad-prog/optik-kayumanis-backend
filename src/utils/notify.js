@@ -49,32 +49,53 @@ Optik Kayumanis`;
 
 // ---------------------------------------------------------------------
 // EMAIL — via Nodemailer (SMTP apa saja: Gmail, provider hosting, dll)
+//
+// Ada 2 akun SMTP terpisah:
+// - CS   (SMTP_CS_*)    → dipakai untuk email yang dilihat CUSTOMER
+//                          (invoice pesanan), supaya customer bisa
+//                          langsung balas ke alamat CS kalau ada pertanyaan.
+// - ADMIN (SMTP_ADMIN_*) → dipakai untuk notifikasi INTERNAL
+//                          (pesanan baru masuk, lisensi kadaluarsa),
+//                          jadi kotak masuk admin tidak campur dengan
+//                          email customer.
+//
+// Kalau salah satu belum diisi di .env, otomatis fallback pakai variabel
+// SMTP_* yang lama (satu akun untuk semua) supaya tetap jalan.
 // ---------------------------------------------------------------------
-let transporter = null;
+const transporters = {};
 
-function getTransporter() {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: String(process.env.SMTP_PORT) === "465", // true untuk port 465, false untuk 587/25
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
+function buildCreds(prefix) {
+  const host = process.env[`SMTP_${prefix}_HOST`] || process.env.SMTP_HOST;
+  const port = process.env[`SMTP_${prefix}_PORT`] || process.env.SMTP_PORT;
+  const user = process.env[`SMTP_${prefix}_USER`] || process.env.SMTP_USER;
+  const pass = process.env[`SMTP_${prefix}_PASS`] || process.env.SMTP_PASS;
+  const from =
+    process.env[`SMTP_${prefix}_FROM`] ||
+    process.env.SMTP_FROM ||
+    (user ? `"Optik Kayumanis" <${user}>` : undefined);
+  return { host, port, user, pass, from };
+}
+
+function getTransporter(prefix) {
+  if (!transporters[prefix]) {
+    const { host, port, user, pass } = buildCreds(prefix);
+    if (!host || !user || !pass) return null;
+    transporters[prefix] = nodemailer.createTransport({
+      host,
+      port: Number(port || 587),
+      secure: String(port) === "465", // true untuk port 465, false untuk 587/25
+      auth: { user, pass },
     });
   }
-  return transporter;
+  return transporters[prefix];
 }
 
 async function sendInvoiceEmail(order, toEmail) {
-  if (
-    !process.env.SMTP_HOST ||
-    !process.env.SMTP_USER ||
-    !process.env.SMTP_PASS
-  ) {
+  const { from } = buildCreds("CS");
+  const transporter = getTransporter("CS");
+  if (!transporter) {
     console.warn(
-      "[notify] SMTP belum dikonfigurasi di .env — email invoice dilewati.",
+      "[notify] SMTP CS belum dikonfigurasi di .env — email invoice dilewati.",
     );
     return;
   }
@@ -86,14 +107,13 @@ async function sendInvoiceEmail(order, toEmail) {
   }
 
   try {
-    await getTransporter().sendMail({
-      from:
-        process.env.SMTP_FROM || `"Optik Kayumanis" <${process.env.SMTP_USER}>`,
+    await transporter.sendMail({
+      from,
       to: toEmail,
       subject: `Invoice Pesanan ${order.orderNumber} — Optik Kayumanis`,
       text: buildInvoiceText(order),
     });
-    console.log(`[notify] Email invoice terkirim ke ${toEmail}`);
+    console.log(`[notify] Email invoice (CS) terkirim ke ${toEmail}`);
   } catch (err) {
     // Sengaja tidak di-throw ulang: kegagalan kirim notifikasi TIDAK BOLEH
     // menggagalkan proses checkout / pembayaran.
@@ -161,14 +181,14 @@ async function sendInvoiceWhatsapp(order) {
 // stabil connect lagi. Untuk saat ini, notifikasi hanya lewat email.
 // ---------------------------------------------------------------------
 async function sendAdminOrderAlert(order) {
-  if (
-    !process.env.SMTP_HOST ||
-    !process.env.SMTP_USER ||
-    !process.env.SMTP_PASS
-  ) {
-    return;
-  }
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+  const { user: adminUser, from } = buildCreds("ADMIN");
+  const transporter = getTransporter("ADMIN");
+  if (!transporter) return;
+
+  // ADMIN_EMAIL bisa dipakai untuk override alamat TUJUAN kalau kamu mau
+  // notifikasi masuk ke inbox yang beda dari akun pengirimnya. Kalau
+  // dikosongkan, otomatis dikirim ke alamat akun SMTP_ADMIN_USER sendiri.
+  const adminEmail = process.env.ADMIN_EMAIL || adminUser;
   if (!adminEmail) return;
 
   try {
@@ -192,8 +212,8 @@ ${order.shippingAddress}, ${order.city}, ${order.province} ${order.postalCode}
 
 Silakan cek panel admin di /admin/orders untuk memproses pesanan ini.`;
 
-    await getTransporter().sendMail({
-      from: process.env.SMTP_FROM || `"Optik Kayumanis" <${process.env.SMTP_USER}>`,
+    await transporter.sendMail({
+      from,
       to: adminEmail,
       subject: `🔔 [Pesanan Baru] ${order.orderNumber} - ${order.recipientName}`,
       text,
@@ -219,13 +239,11 @@ async function sendOrderInvoiceNotifications(order, user) {
 // kadaluarsa (lihat logic expiryNotifiedAt di checkLicense.js).
 // ---------------------------------------------------------------------
 async function sendLicenseExpiredNotification(direkturEmails, expiredAt) {
-  if (
-    !process.env.SMTP_HOST ||
-    !process.env.SMTP_USER ||
-    !process.env.SMTP_PASS
-  ) {
+  const { from } = buildCreds("ADMIN");
+  const transporter = getTransporter("ADMIN");
+  if (!transporter) {
     console.warn(
-      "[notify] SMTP belum dikonfigurasi di .env — notifikasi lisensi kadaluarsa dilewati.",
+      "[notify] SMTP Admin belum dikonfigurasi di .env — notifikasi lisensi kadaluarsa dilewati.",
     );
     return;
   }
@@ -254,9 +272,8 @@ memperpanjang masa aktif website.
 — Sistem Optik Kayumanis (notifikasi otomatis)`;
 
   try {
-    await getTransporter().sendMail({
-      from:
-        process.env.SMTP_FROM || `"Optik Kayumanis" <${process.env.SMTP_USER}>`,
+    await transporter.sendMail({
+      from,
       to: direkturEmails.join(","),
       subject: "⚠️ Lisensi Website Optik Kayumanis Telah Kadaluarsa",
       text,
