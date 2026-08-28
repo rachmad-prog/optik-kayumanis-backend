@@ -160,11 +160,55 @@ async function sendInvoiceWhatsapp(order) {
 // `sendInvoiceWhatsapp(order),` di bawah ini kalau device Fonnte sudah
 // stabil connect lagi. Untuk saat ini, notifikasi hanya lewat email.
 // ---------------------------------------------------------------------
+async function sendAdminOrderAlert(order) {
+  if (
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS
+  ) {
+    return;
+  }
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+  if (!adminEmail) return;
+
+  try {
+    const itemLines = order.items
+      .map((i) => `- ${i.name} x${i.quantity} (${formatRupiah(i.price * i.quantity)})`)
+      .join("\n");
+
+    const text = `Halo Admin Optik Kayumanis,
+
+Ada PESANAN BARU yang masuk ke sistem:
+
+No. Pesanan : ${order.orderNumber}
+Pemesan     : ${order.recipientName} (${order.phone})
+Total       : ${formatRupiah(order.total)}
+
+Rincian Produk:
+${itemLines}
+
+Alamat Pengiriman:
+${order.shippingAddress}, ${order.city}, ${order.province} ${order.postalCode}
+
+Silakan cek panel admin di /admin/orders untuk memproses pesanan ini.`;
+
+    await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || `"Optik Kayumanis" <${process.env.SMTP_USER}>`,
+      to: adminEmail,
+      subject: `🔔 [Pesanan Baru] ${order.orderNumber} - ${order.recipientName}`,
+      text,
+    });
+    console.log(`[notify] Notifikasi pesanan baru terkirim ke Admin (${adminEmail})`);
+  } catch (err) {
+    console.error("[notify] Gagal mengirim email pesanan baru ke Admin:", err.message);
+  }
+}
+
 async function sendOrderInvoiceNotifications(order, user) {
   await Promise.allSettled([
     sendInvoiceEmail(order, user?.email),
+    sendAdminOrderAlert(order),
     // sendInvoiceWhatsapp(order),
-    // dinonaktifkan sementara — lihat catatan di atas
   ]);
 }
 

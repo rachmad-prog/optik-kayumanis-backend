@@ -35,7 +35,7 @@ async function checkout(req, res) {
   if (!parsed.success) {
     return res.status(400).json({ message: parsed.error.errors[0].message });
   }
-  const { items, recipientName, phone, shippingAddress, city, province, postalCode } = parsed.data;
+  const { items, recipientName, phone, shippingAddress, city, province, postalCode, bankName } = parsed.data;
 
   const productIds = items.map((i) => i.productId);
   const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
@@ -64,11 +64,6 @@ async function checkout(req, res) {
 
   let order;
   try {
-    // Create the order and decrement stock atomically. The conditional
-    // updateMany (stock >= quantity) re-checks stock at the moment of the
-    // write, so two concurrent checkouts for the same low-stock product
-    // can no longer both pass the earlier findMany() snapshot check and
-    // both decrement past zero.
     order = await prisma.$transaction(async (tx) => {
       for (const item of orderItemsData) {
         const result = await tx.product.updateMany({
@@ -96,73 +91,22 @@ async function checkout(req, res) {
           city,
           province,
           postalCode,
+          paymentType: bankName || "BANK_TRANSFER",
           items: { create: orderItemsData },
         },
         include: { items: true },
       });
     });
-  } catch (err) {
-    const status = err.status || 500;
-    return res.status(status).json({ message: err.message || "Gagal membuat pesanan." });
-  }
 
-  try {
-    // Create Midtrans Snap transaction
-    const transaction = await snap.createTransaction({
-      transaction_details: {
-        order_id: order.orderNumber,
-        gross_amount: total,
-      },
-      customer_details: {
-        first_name: recipientName,
-        phone,
-        email: req.user.email,
-      },
-      item_details: [
-        ...orderItemsData.map((i) => ({
-          id: i.productId,
-          name: i.name.slice(0, 50),
-          price: i.price,
-          quantity: i.quantity,
-        })),
-        { id: "SHIPPING", name: "Ongkos Kirim", price: SHIPPING_COST, quantity: 1 },
-      ],
-    });
-
-    const updated = await prisma.order.update({
-      where: { id: order.id },
-      data: { midtransOrderId: order.orderNumber, midtransToken: transaction.token },
-      include: { items: true },
-    });
-
-    // Kirim invoice ke customer (email + WhatsApp) begitu order & transaksi
-    // pembayaran berhasil dibuat — tidak menunggu (fire-and-forget) supaya
-    // respons checkout tetap cepat, dan tidak pernah menggagalkan checkout
-    // walau pengiriman notifikasi gagal (lihat utils/notify.js).
-    sendOrderInvoiceNotifications(updated, req.user).catch((err) =>
+    // Kirim notifikasi email invoice ke Customer & Admin
+    sendOrderInvoiceNotifications(order, req.user).catch((err) =>
       console.error("[notify] Gagal mengirim notifikasi invoice:", err)
     );
 
-    res.status(201).json({ order: updated, snapToken: transaction.token, redirectUrl: transaction.redirect_url });
+    return res.status(201).json({ order, message: "Pesanan berhasil dibuat. Silakan lakukan transfer bank." });
   } catch (err) {
-    // Midtrans call failed after the order was already created and stock
-    // decremented — roll both back instead of leaving an orphaned order
-    // with no payment token and stock stuck decremented.
-    try {
-      await prisma.$transaction(async (tx) => {
-        for (const item of orderItemsData) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { increment: item.quantity } },
-          });
-        }
-        await tx.order.delete({ where: { id: order.id } });
-      });
-    } catch (rollbackErr) {
-      console.error("[checkout] Gagal rollback order setelah Midtrans error:", rollbackErr);
-    }
     const status = err.status || 500;
-    res.status(status).json({ message: err.message || "Gagal membuat pesanan." });
+    return res.status(status).json({ message: err.message || "Gagal membuat pesanan." });
   }
 }
 

@@ -146,6 +146,10 @@ const DEFAULT_CONTENT = {
     mapEmbed: "",
     copyrightText: "Optik Kayumanis. Seluruh hak cipta dilindungi.",
   },
+  bankAccounts: [
+    { bankName: "Bank BCA", accountNumber: "1234567890", accountName: "Optik Kayumanis" },
+    { bankName: "Bank Mandiri", accountNumber: "9876543210123", accountName: "Optik Kayumanis" },
+  ],
 };
 
 // Deep merge for plain objects so partial/per-section saves (e.g. saving just
