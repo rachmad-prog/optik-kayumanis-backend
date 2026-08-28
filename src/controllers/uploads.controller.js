@@ -1,14 +1,11 @@
-const crypto = require("crypto");
-const path = require("path");
-const { PutObjectCommand } = require("@aws-sdk/client-s3");
-const { r2, R2_BUCKET_NAME, R2_PUBLIC_URL } = require("../config/r2");
+// Menyimpan gambar secara lokal di folder /uploads (lihat src/middleware/upload.js).
+// URL publik dibentuk dari PUBLIC_API_URL (kalau diisi di .env) atau otomatis
+// dari protokol+host request yang masuk (works out of the box di VPS, asalkan
+// tidak di belakang reverse proxy yang menyembunyikan host asli).
 
-const UPLOAD_PREFIX = "optikkayumanis_uploads"; // nama "folder" (key prefix) di bucket R2
-
-function buildObjectKey(originalName) {
-  const ext = path.extname(originalName || "").toLowerCase() || ".jpg";
-  const uniqueId = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
-  return `${UPLOAD_PREFIX}/${uniqueId}${ext}`;
+function buildPublicUrl(req, filename) {
+  const base = (process.env.PUBLIC_API_URL || `${req.protocol}://${req.get("host")}`).replace(/\/+$/, "");
+  return `${base}/uploads/${filename}`;
 }
 
 async function uploadFiles(req, res) {
@@ -18,36 +15,13 @@ async function uploadFiles(req, res) {
     return res.status(400).json({ message: "Tidak ada file yang diunggah." });
   }
 
-  if (!R2_PUBLIC_URL) {
-    console.error(
-      "[uploads] R2_PUBLIC_URL belum diset. Set env ini ke URL publik bucket R2 kamu " +
-        "(mis. https://pub-xxxxxxxx.r2.dev atau custom domain)."
-    );
-  }
-
   try {
-    const uploadToR2 = async (file) => {
-      const key = buildObjectKey(file.originalname);
-
-      await r2.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: key,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-        })
-      );
-
-      return `${R2_PUBLIC_URL}/${key}`;
-    };
-
-    const urls = await Promise.all(files.map(uploadToR2));
-
+    const urls = files.map((file) => buildPublicUrl(req, file.filename));
     res.status(201).json({ urls });
   } catch (error) {
-    console.error("R2 Upload Error:", error);
+    console.error("Upload Error:", error);
     res.status(500).json({
-      message: "Gagal mengunggah ke Cloudflare R2",
+      message: "Gagal mengunggah gambar.",
       error: error.message,
     });
   }

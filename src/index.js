@@ -52,8 +52,12 @@ app.use(morgan("dev"));
 
 app.use(express.json());
 
-// Catatan: gambar produk kini disimpan di Cloudflare R2 (lihat src/config/r2.js),
-// jadi static serving folder lokal /uploads sudah tidak diperlukan lagi.
+// Gambar produk kini disimpan lokal di folder /uploads (lihat
+// src/middleware/upload.js & src/controllers/uploads.controller.js).
+// Folder ini disajikan sebagai static file di path yang sama, jadi file
+// yang tersimpan di uploads/nama-file.jpg bisa diakses lewat
+// https://domain-api-kamu/uploads/nama-file.jpg
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 app.get("/api/health", (req, res) =>
   res.json({ status: "ok", service: "optikkayumanis-api" }),
