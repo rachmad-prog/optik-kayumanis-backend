@@ -3,7 +3,7 @@ const path = require("path");
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const { r2, R2_BUCKET_NAME, R2_PUBLIC_URL } = require("../config/r2");
 
-const UPLOAD_PREFIX = "dapoer_toeti_uploads"; // nama "folder" (key prefix) di bucket R2
+const UPLOAD_PREFIX = "optikkayumanis_uploads"; // nama "folder" (key prefix) di bucket R2
 
 function buildObjectKey(originalName) {
   const ext = path.extname(originalName || "").toLowerCase() || ".jpg";
