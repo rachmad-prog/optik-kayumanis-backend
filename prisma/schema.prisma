@@ -71,6 +71,10 @@ model Product {
   stock       Int         @default(0)
   frameShape  String?
   frameMaterial String?
+  color       String?
+  lensWidth     Float?
+  bridgeWidth   Float?
+  templeLength  Float?
   images      ProductImage[]
   category    Category    @relation(fields: [categoryId], references: [id])
   categoryId  String
