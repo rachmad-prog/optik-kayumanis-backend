@@ -1,12 +1,15 @@
-const cloudinary = require("cloudinary").v2;
-const streamifier = require("streamifier");
+const crypto = require("crypto");
+const path = require("path");
+const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const { r2, R2_BUCKET_NAME, R2_PUBLIC_URL } = require("../config/r2");
 
-// Pastikan konfigurasi ini ada (atau ambil dari file config global Anda)
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const UPLOAD_PREFIX = "dapoer_toeti_uploads"; // nama "folder" (key prefix) di bucket R2
+
+function buildObjectKey(originalName) {
+  const ext = path.extname(originalName || "").toLowerCase() || ".jpg";
+  const uniqueId = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
+  return `${UPLOAD_PREFIX}/${uniqueId}${ext}`;
+}
 
 async function uploadFiles(req, res) {
   const files = req.files || [];
@@ -15,34 +18,38 @@ async function uploadFiles(req, res) {
     return res.status(400).json({ message: "Tidak ada file yang diunggah." });
   }
 
+  if (!R2_PUBLIC_URL) {
+    console.error(
+      "[uploads] R2_PUBLIC_URL belum diset. Set env ini ke URL publik bucket R2 kamu " +
+        "(mis. https://pub-xxxxxxxx.r2.dev atau custom domain)."
+    );
+  }
+
   try {
-    // Fungsi untuk mengunggah satu file ke Cloudinary
-    const uploadToCloudinary = (file) => {
-      return new Promise((resolve, reject) => {
-        const cld_upload_stream = cloudinary.uploader.upload_stream(
-          { folder: "dapoer_toeti_uploads" },
-          (error, result) => {
-            if (result) resolve(result.secure_url);
-            else reject(error);
-          },
-        );
-        streamifier.createReadStream(file.buffer).pipe(cld_upload_stream);
-      });
+    const uploadToR2 = async (file) => {
+      const key = buildObjectKey(file.originalname);
+
+      await r2.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: key,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        })
+      );
+
+      return `${R2_PUBLIC_URL}/${key}`;
     };
 
-    // Jalankan unggahan untuk semua file yang dikirim
-    const uploadPromises = files.map((file) => uploadToCloudinary(file));
-    const urls = await Promise.all(uploadPromises);
+    const urls = await Promise.all(files.map(uploadToR2));
 
     res.status(201).json({ urls });
   } catch (error) {
-    console.error("Cloudinary Upload Error:", error);
-    res
-      .status(500)
-      .json({
-        message: "Gagal mengunggah ke Cloudinary",
-        error: error.message,
-      });
+    console.error("R2 Upload Error:", error);
+    res.status(500).json({
+      message: "Gagal mengunggah ke Cloudflare R2",
+      error: error.message,
+    });
   }
 }
 

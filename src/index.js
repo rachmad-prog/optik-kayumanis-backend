@@ -50,11 +50,10 @@ app.use(
 
 app.use(morgan("dev"));
 
-// Midtrans webhook needs raw JSON body too — express.json() is fine, Midtrans posts JSON
 app.use(express.json());
 
-// Uploaded product images (see src/middleware/upload.js)
-// app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+// Catatan: gambar produk kini disimpan di Cloudflare R2 (lihat src/config/r2.js),
+// jadi static serving folder lokal /uploads sudah tidak diperlukan lagi.
 
 app.get("/api/health", (req, res) =>
   res.json({ status: "ok", service: "optikkayumanis-api" }),

@@ -113,8 +113,6 @@ model Order {
   city          String
   province      String
   postalCode    String
-  midtransOrderId String?   @unique
-  midtransToken   String?
   paymentType     String?
   paidAt          DateTime?
   createdAt     DateTime    @default(now())

@@ -1,6 +1,5 @@
 const { z } = require("zod");
 const prisma = require("../config/db");
-const { snap } = require("../utils/midtrans");
 const { sendOrderInvoiceNotifications } = require("../utils/notify");
 
 const SHIPPING_COST = 20000; // flat rate, in IDR
@@ -29,7 +28,7 @@ function generateOrderNumber() {
   return `OK-${stamp}-${rand}`;
 }
 
-// POST /api/orders/checkout — creates order + Midtrans Snap transaction
+// POST /api/orders/checkout — creates order, customer transfers manually to selected bank
 async function checkout(req, res) {
   const parsed = checkoutSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -110,39 +109,6 @@ async function checkout(req, res) {
   }
 }
 
-// POST /api/orders/midtrans-notification — Midtrans webhook
-async function midtransNotification(req, res) {
-  const { coreApi } = require("../utils/midtrans");
-  try {
-    const statusResponse = await coreApi.transaction.notification(req.body);
-    const { order_id, transaction_status, fraud_status, payment_type } = statusResponse;
-
-    let status = "PENDING";
-    if (transaction_status === "capture" || transaction_status === "settlement") {
-      status = fraud_status === "challenge" ? "PENDING" : "PAID";
-    } else if (transaction_status === "deny" || transaction_status === "cancel") {
-      status = "CANCELLED";
-    } else if (transaction_status === "expire") {
-      status = "EXPIRED";
-    } else if (transaction_status === "pending") {
-      status = "PENDING";
-    }
-
-    await prisma.order.update({
-      where: { orderNumber: order_id },
-      data: {
-        status,
-        paymentType: payment_type,
-        paidAt: status === "PAID" ? new Date() : undefined,
-      },
-    });
-
-    res.status(200).json({ message: "OK" });
-  } catch (err) {
-    res.status(500).json({ message: "Gagal memproses notifikasi." });
-  }
-}
-
 // GET /api/orders/me — order history for logged-in user
 async function myOrders(req, res) {
   const orders = await prisma.order.findMany({
@@ -182,13 +148,20 @@ async function adminUpdateOrderStatus(req, res) {
   if (!valid.includes(status)) {
     return res.status(400).json({ message: "Status tidak valid." });
   }
-  const order = await prisma.order.update({ where: { id: req.params.id }, data: { status } });
+  const order = await prisma.order.update({
+    where: { id: req.params.id },
+    data: {
+      status,
+      // Catat waktu pembayaran begitu admin menandai pesanan sebagai PAID
+      // (verifikasi manual setelah cek mutasi rekening / bukti transfer)
+      paidAt: status === "PAID" ? new Date() : undefined,
+    },
+  });
   res.json({ order });
 }
 
 module.exports = {
   checkout,
-  midtransNotification,
   myOrders,
   getOrder,
   adminListOrders,
