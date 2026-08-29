@@ -150,6 +150,14 @@ const DEFAULT_CONTENT = {
     { bankName: "Bank BCA", accountNumber: "1234567890", accountName: "Optik Kayumanis" },
     { bankName: "Bank Mandiri", accountNumber: "9876543210123", accountName: "Optik Kayumanis" },
   ],
+  storeSlides: [
+    {
+      image: "",
+      title: "Katalog Frame & Lensa Ultra Elegant",
+      desc: "Temukan desain kacamata terkini berstandar presisi optik. Diproduksi dengan material Titanium ringan, TR90 fleksibel, dan lensa anti-radiasi terkini.",
+      link: "",
+    },
+  ],
 };
 
 // Deep merge for plain objects so partial/per-section saves (e.g. saving just
