@@ -21,7 +21,7 @@ const productSchema = z.object({
   images: z.array(z.string().url()).optional(),
 });
 
-const { getProxyBaseUrl, normalizeR2Urls } = require("../utils/normalizeUrl");
+const { getProxyBaseUrl, normalizeR2Urls, deleteR2Files } = require("../utils/normalizeUrl");
 
 // GET /api/products?category=&q=&featured=&page=&limit=
 async function listProducts(req, res) {

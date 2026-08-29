@@ -1,7 +1,7 @@
 const slugify = require("slugify");
 const prisma = require("../config/db");
 
-const { getProxyBaseUrl, normalizeR2Urls } = require("../utils/normalizeUrl");
+const { getProxyBaseUrl, normalizeR2Urls, deleteR2Files } = require("../utils/normalizeUrl");
 
 async function listCategories(req, res) {
   const categories = await prisma.category.findMany({
