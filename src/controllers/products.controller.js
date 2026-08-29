@@ -123,10 +123,19 @@ async function updateProduct(req, res) {
   }
   const { images, ...data } = parsed.data;
 
-  const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
+  const existing = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    include: { images: true },
+  });
   if (!existing) return res.status(404).json({ message: "Produk tidak ditemukan." });
 
   if (images) {
+    // Hapus foto lama yang dihapus/diganti dari Cloudflare R2
+    const oldUrls = existing.images.map((img) => img.url);
+    const removedUrls = oldUrls.filter((url) => !images.includes(url));
+    if (removedUrls.length > 0) {
+      await deleteR2Files(removedUrls);
+    }
     await prisma.productImage.deleteMany({ where: { productId: existing.id } });
   }
 
@@ -144,8 +153,17 @@ async function updateProduct(req, res) {
 }
 
 async function deleteProduct(req, res) {
-  const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
+  const existing = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    include: { images: true },
+  });
   if (!existing) return res.status(404).json({ message: "Produk tidak ditemukan." });
+
+  // Hapus semua foto produk ini dari Cloudflare R2
+  if (existing.images && existing.images.length > 0) {
+    const urls = existing.images.map((img) => img.url);
+    await deleteR2Files(urls);
+  }
 
   await prisma.product.delete({ where: { id: req.params.id } });
   res.json({ message: "Produk dihapus." });

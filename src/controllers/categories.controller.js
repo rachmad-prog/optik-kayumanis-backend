@@ -34,6 +34,9 @@ async function updateCategory(req, res) {
   const { name, imageUrl } = req.body;
   const data = {};
 
+  const existing = await prisma.category.findUnique({ where: { id: req.params.id } });
+  if (!existing) return res.status(404).json({ message: "Kategori tidak ditemukan." });
+
   if (name !== undefined) {
     if (!name || name.trim().length < 2) {
       return res.status(400).json({ message: "Nama kategori minimal 2 karakter." });
@@ -42,6 +45,10 @@ async function updateCategory(req, res) {
     data.slug = slugify(name, { lower: true, strict: true });
   }
   if (imageUrl !== undefined) {
+    // Jika gambar kategori diganti/dihapus, hapus file lama dari R2
+    if (existing.imageUrl && existing.imageUrl !== imageUrl) {
+      await deleteR2Files(existing.imageUrl);
+    }
     data.imageUrl = imageUrl || null;
   }
 
@@ -55,10 +62,18 @@ async function updateCategory(req, res) {
 }
 
 async function deleteCategory(req, res) {
+  const existing = await prisma.category.findUnique({ where: { id: req.params.id } });
+  if (!existing) return res.status(404).json({ message: "Kategori tidak ditemukan." });
+
   const inUse = await prisma.product.count({ where: { categoryId: req.params.id } });
   if (inUse > 0) {
     return res.status(400).json({ message: "Kategori masih dipakai produk lain." });
   }
+
+  if (existing.imageUrl) {
+    await deleteR2Files(existing.imageUrl);
+  }
+
   await prisma.category.delete({ where: { id: req.params.id } });
   res.json({ message: "Kategori dihapus." });
 }
