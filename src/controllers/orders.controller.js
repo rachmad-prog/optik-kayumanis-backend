@@ -115,17 +115,33 @@ async function checkout(req, res) {
     // Untuk guest (tanpa akun), pakai email yang diisi manual saat checkout.
     // Hasilnya (berhasil/gagal) DICATAT ke order supaya admin bisa lihat status-nya
     // di panel /admin/orders dan kirim ulang manual kalau perlu, tanpa buka log server.
-    sendOrderInvoiceNotifications(order, req.user || { email })
-      .then((result) =>
-        prisma.order.update({
+    //
+    // PENTING: ini SENGAJA di-`await` (bukan fire-and-forget) sebelum response
+    // dikirim. Backend ini jalan di Vercel Serverless Functions — begitu response
+    // terkirim, environment fungsinya bisa langsung dimatikan, sehingga proses
+    // async yang belum selesai (termasuk pencatatan invoiceEmailSent di bawah)
+    // bisa terputus di tengah jalan walau email-nya sendiri sempat berhasil
+    // terkirim. Meng-await di sini memastikan status yang tercatat di database
+    // selalu akurat. Ini menambah sedikit waktu tunggu checkout (~1-3 detik),
+    // tapi kegagalan notifikasi tetap TIDAK menggagalkan pesanan (lihat try/catch).
+    try {
+      const result = await sendOrderInvoiceNotifications(order, req.user || { email });
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          invoiceEmailSent: !!result?.ok,
+          invoiceEmailError: result?.ok ? null : result?.reason || "Gagal mengirim, alasan tidak diketahui.",
+        },
+      });
+    } catch (err) {
+      console.error("[notify] Gagal mengirim notifikasi invoice:", err);
+      await prisma.order
+        .update({
           where: { id: order.id },
-          data: {
-            invoiceEmailSent: !!result?.ok,
-            invoiceEmailError: result?.ok ? null : result?.reason || "Gagal mengirim, alasan tidak diketahui.",
-          },
-        }),
-      )
-      .catch((err) => console.error("[notify] Gagal mengirim notifikasi invoice:", err));
+          data: { invoiceEmailSent: false, invoiceEmailError: err?.message || "Gagal mengirim, alasan tidak diketahui." },
+        })
+        .catch(() => {});
+    }
 
     return res.status(201).json({ order, message: "Pesanan berhasil dibuat. Silakan lakukan transfer bank." });
   } catch (err) {
