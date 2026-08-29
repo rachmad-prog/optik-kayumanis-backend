@@ -104,8 +104,15 @@ model ProductImage {
 model Order {
   id            String      @id @default(cuid())
   orderNumber   String      @unique
-  user          User        @relation(fields: [userId], references: [id])
-  userId        String
+  user          User?       @relation(fields: [userId], references: [id])
+  userId        String?
+  // Diisi kalau pesanan dibuat tanpa login (guest checkout).
+  // Wajib diisi oleh guest supaya invoice & pelacakan pesanan tetap bisa dilakukan.
+  guestEmail    String?
+  // Status pengiriman email invoice ke customer, supaya admin bisa lihat langsung
+  // di panel kalau ada yang gagal terkirim (mis. SMTP bermasalah) tanpa buka log server.
+  invoiceEmailSent   Boolean   @default(false)
+  invoiceEmailError  String?
   items         OrderItem[]
   subtotal      Int
   shippingCost  Int         @default(0)

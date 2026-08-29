@@ -1,22 +1,10 @@
 const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
-const crypto = require("crypto");
 
-// Simpan file di folder lokal /uploads (di root backend). Di VPS, folder ini
-// persisten selama tidak dihapus manual — beda dengan hosting serverless
-// (mis. Vercel) yang filesystem-nya sementara/reset tiap deploy.
-const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || "").toLowerCase() || ".jpg";
-    const uniqueId = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
-    cb(null, `${uniqueId}${ext}`);
-  },
-});
+// File disimpan sementara di memori (buffer), lalu diupload langsung ke
+// Cloudflare R2 dari controller (lihat src/controllers/uploads.controller.js
+// & src/config/r2.js). Tidak menulis apapun ke disk, jadi aman dipakai di
+// lingkungan manapun (lokal, VPS, maupun serverless seperti Vercel).
+const storage = multer.memoryStorage();
 
 function fileFilter(req, file, cb) {
   if (!file.mimetype.startsWith("image/")) {
@@ -25,7 +13,6 @@ function fileFilter(req, file, cb) {
   cb(null, true);
 }
 
-// 2. Sekarang upload tidak lagi membutuhkan fs.mkdirSync atau path
 const upload = multer({
   storage,
   fileFilter,

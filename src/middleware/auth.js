@@ -29,4 +29,26 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, requireAdmin };
+// Tidak mewajibkan login: kalau ada token yang valid, req.user diisi (untuk
+// customer yang sudah punya akun). Kalau tidak ada token / token tidak valid,
+// request tetap diteruskan sebagai guest (req.user = null).
+// Dipakai untuk endpoint yang boleh diakses tanpa akun, mis. checkout guest.
+async function optionalAuth(req, res, next) {
+  try {
+    const header = req.headers.authorization || "";
+    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+    const decoded = verifyToken(token);
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    req.user = user || null;
+    next();
+  } catch (err) {
+    req.user = null;
+    next();
+  }
+}
+
+module.exports = { requireAuth, requireAdmin, optionalAuth };

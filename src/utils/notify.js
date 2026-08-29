@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { getMergedContent } = require("../controllers/content.controller");
 
 // ---------------------------------------------------------------------
 // Helper: format angka jadi Rupiah, sama seperti di frontend (lib/api.js)
@@ -12,15 +13,96 @@ function formatRupiah(amount) {
 }
 
 // ---------------------------------------------------------------------
+// Helper: ubah nomor HP lokal (08xxx) jadi format internasional wa.me (62xxx),
+// dan siapkan URL WhatsApp berisi draf pesan follow up ke customer.
+// ---------------------------------------------------------------------
+function formatWaNumber(phone) {
+  const digits = String(phone || "").replace(/[^0-9]/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("0")) return `62${digits.slice(1)}`;
+  if (digits.startsWith("62")) return digits;
+  return `62${digits}`;
+}
+
+function buildAdminFollowUpWaUrl(order) {
+  const waNumber = formatWaNumber(order.phone);
+  if (!waNumber) return null;
+  const text = encodeURIComponent(
+    `Halo Kak ${order.recipientName}, terima kasih sudah order di Optik Kayumanis (No. Pesanan ${order.orderNumber}). Boleh minta info/konfirmasi terkait pesanannya? 🙏`,
+  );
+  return `https://wa.me/${waNumber}?text=${text}`;
+}
+
+// ---------------------------------------------------------------------
+// Helper: siapkan link WhatsApp untuk PELANGGAN konfirmasi pembayaran ke
+// admin toko (kebalikan dari buildAdminFollowUpWaUrl yang mengarah ke HP
+// pelanggan). Nomor diambil dari pengaturan situs (footer.whatsappLink),
+// dengan fallback nomor default kalau admin belum mengisinya.
+// ---------------------------------------------------------------------
+function buildCustomerConfirmWaUrl(order, whatsappLink) {
+  const base = whatsappLink || "https://wa.me/6281234567890";
+  const text = encodeURIComponent(
+    `Halo Optik Kayumanis, saya sudah transfer untuk pesanan ${order.orderNumber}.\n\n` +
+      `Nama: ${order.recipientName}\n` +
+      `Total Pembayaran: ${formatRupiah(order.total)}\n` +
+      `Transfer ke: ${order.paymentType || "Bank Transfer"}\n\n` +
+      `Mohon verifikasi pesanan saya. Terima kasih!`,
+  );
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}text=${text}`;
+}
+
+// ---------------------------------------------------------------------
+// Helper: ubah order.paymentType ("Bank BCA (1234567890)") jadi
+// {bankName, accountNumber, accountName} yang rapi untuk ditampilkan.
+// Kalau order lama tidak punya paymentType yang valid (mis. sebelum bug
+// bankName diperbaiki, sempat tersimpan literal "BANK_TRANSFER"), fallback
+// ke rekening pertama yang admin sudah set di pengaturan situs supaya
+// pelanggan tetap lihat nomor rekening asli, bukan teks enum mentah.
+// ---------------------------------------------------------------------
+function resolveBankInfo(order, content) {
+  const raw = (order.paymentType || "").trim();
+  const isPlaceholder = !raw || raw === "BANK_TRANSFER";
+
+  if (!isPlaceholder) {
+    const match = raw.match(/^(.*)\s\(([^)]+)\)\s*$/);
+    if (match) {
+      return { bankName: match[1].trim(), accountNumber: match[2].trim(), accountName: null };
+    }
+    return { bankName: raw, accountNumber: null, accountName: null };
+  }
+
+  const fallback = content?.bankAccounts?.[0];
+  if (fallback) {
+    return {
+      bankName: fallback.bankName,
+      accountNumber: fallback.accountNumber,
+      accountName: fallback.accountName,
+    };
+  }
+
+  return { bankName: "Rekening akan dikonfirmasi oleh admin", accountNumber: null, accountName: null };
+}
+
+// ---------------------------------------------------------------------
 // Helper: susun isi invoice (dipakai untuk email & WhatsApp)
 // ---------------------------------------------------------------------
-function buildInvoiceText(order) {
+function buildInvoiceText(order, whatsappLink, content) {
+  const bankInfo = resolveBankInfo(order, content);
+  const bankLines = [
+    bankInfo.bankName,
+    bankInfo.accountName ? `a.n. ${bankInfo.accountName}` : null,
+    bankInfo.accountNumber ? `No. Rekening/VA: ${bankInfo.accountNumber}` : null,
+  ].filter(Boolean).join("\n");
+
   const itemLines = order.items
     .map(
       (i) =>
         `- ${i.name} x${i.quantity} — ${formatRupiah(i.price * i.quantity)}`,
     )
     .join("\n");
+
+  const waUrl = buildCustomerConfirmWaUrl(order, whatsappLink);
 
   return `Halo ${order.recipientName},
 
@@ -37,30 +119,110 @@ Subtotal     : ${formatRupiah(order.subtotal)}
 Ongkos Kirim : ${formatRupiah(order.shippingCost)}
 Total        : ${formatRupiah(order.total)}
 
+Instruksi Pembayaran:
+Silakan transfer sebesar ${formatRupiah(order.total)} ke:
+${bankLines}
+
+Setelah transfer, mohon konfirmasi ke admin kami via WhatsApp:
+${waUrl}
+
 Alamat Pengiriman:
 ${order.shippingAddress}, ${order.city}, ${order.province} ${order.postalCode}
 
-Pesanan ini akan diproses setelah pembayaran kami terima. Silakan selesaikan
-pembayaran melalui halaman yang sudah terbuka.
+Pesanan ini akan diproses setelah pembayaran kami terima.
 
 Terima kasih,
 Optik Kayumanis`;
 }
 
 // ---------------------------------------------------------------------
+// Helper: versi HTML invoice, dengan tombol WhatsApp konfirmasi ke admin
+// yang bisa langsung diklik dari email.
+// ---------------------------------------------------------------------
+function buildInvoiceHtml(order, whatsappLink, content) {
+  const waUrl = buildCustomerConfirmWaUrl(order, whatsappLink);
+  const bankInfo = resolveBankInfo(order, content);
+
+  const itemRowsHtml = order.items
+    .map(
+      (i) =>
+        `<tr><td style="padding:4px 0;color:#334155;">${i.name} × ${i.quantity}</td><td style="padding:4px 0;text-align:right;color:#334155;">${formatRupiah(i.price * i.quantity)}</td></tr>`,
+    )
+    .join("");
+
+  return `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#0f172a;">
+      <p>Halo ${order.recipientName},</p>
+      <p>Terima kasih telah berbelanja di <strong>Optik Kayumanis</strong>! Berikut rincian pesananmu:</p>
+
+      <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;">
+        <tr><td style="padding:4px 0;color:#64748b;">No. Pesanan</td><td style="padding:4px 0;text-align:right;">${order.orderNumber}</td></tr>
+        <tr><td style="padding:4px 0;color:#64748b;">Tanggal</td><td style="padding:4px 0;text-align:right;">${new Date(order.createdAt).toLocaleString("id-ID")}</td></tr>
+      </table>
+
+      <p style="margin:16px 0 4px;font-weight:bold;">Rincian Pesanan:</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">${itemRowsHtml}</table>
+
+      <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;border-top:1px solid #e2e8f0;padding-top:8px;">
+        <tr><td style="padding:4px 0;color:#64748b;">Subtotal</td><td style="padding:4px 0;text-align:right;">${formatRupiah(order.subtotal)}</td></tr>
+        <tr><td style="padding:4px 0;color:#64748b;">Ongkos Kirim</td><td style="padding:4px 0;text-align:right;">${formatRupiah(order.shippingCost)}</td></tr>
+        <tr><td style="padding:6px 0;font-weight:bold;">Total</td><td style="padding:6px 0;text-align:right;font-weight:bold;">${formatRupiah(order.total)}</td></tr>
+      </table>
+
+      <div style="margin:20px 0;padding:16px;background-color:#0f172a;border-radius:12px;color:#ffffff;">
+        <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#e9d8a6;">Instruksi Pembayaran</p>
+        <p style="margin:0;font-size:16px;font-weight:bold;">${bankInfo.bankName}</p>
+        ${bankInfo.accountName ? `<p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Atas Nama: ${bankInfo.accountName}</p>` : ""}
+        ${
+          bankInfo.accountNumber
+            ? `<table role="presentation" style="margin:12px 0 0;width:100%;">
+                <tr>
+                  <td style="padding:10px 12px;background-color:#1e293b;border-radius:10px;">
+                    <table role="presentation" style="width:100%;">
+                      <tr>
+                        <td style="vertical-align:middle;">
+                          <p style="margin:0;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:#94a3b8;">Nomor Rekening / VA</p>
+                          <p style="margin:2px 0 0;font-size:20px;font-weight:bold;letter-spacing:2px;font-family:'Courier New',Courier,monospace;color:#ffffff;">${bankInfo.accountNumber}</p>
+                        </td>
+                        <td style="vertical-align:middle;text-align:right;width:36px;">
+                          <span title="Salin nomor" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background-color:#334155;border-radius:8px;font-size:14px;">📋</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:6px 0 0;font-size:11px;color:#64748b;">📋 Tekan &amp; tahan nomor di atas untuk menyalin</p>`
+            : ""
+        }
+        <p style="margin:12px 0 0;font-size:13px;color:#cbd5e1;">Transfer sebesar <strong>${formatRupiah(order.total)}</strong> ke rekening di atas.</p>
+      </div>
+
+      <div style="margin:20px 0;text-align:center;">
+        <a href="${waUrl}" target="_blank" style="display:inline-block;background-color:#25D366;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:12px 24px;border-radius:8px;">
+          💬 Konfirmasi Pembayaran via WhatsApp
+        </a>
+      </div>
+
+      <p style="margin:16px 0 4px;font-weight:bold;">Alamat Pengiriman:</p>
+      <p style="margin:0;font-size:14px;color:#334155;">${order.shippingAddress}, ${order.city}, ${order.province} ${order.postalCode}</p>
+
+      <p style="font-size:13px;color:#64748b;margin-top:20px;">Pesanan ini akan diproses setelah pembayaran kami terima.</p>
+      <p style="font-size:14px;margin-top:20px;">Terima kasih,<br/>Optik Kayumanis</p>
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------
 // EMAIL — via Nodemailer (SMTP apa saja: Gmail, provider hosting, dll)
 //
-// Ada 2 akun SMTP terpisah:
-// - CS   (SMTP_CS_*)    → dipakai untuk email yang dilihat CUSTOMER
-//                          (invoice pesanan), supaya customer bisa
-//                          langsung balas ke alamat CS kalau ada pertanyaan.
-// - ADMIN (SMTP_ADMIN_*) → dipakai untuk notifikasi INTERNAL
-//                          (pesanan baru masuk, lisensi kadaluarsa),
-//                          jadi kotak masuk admin tidak campur dengan
-//                          email customer.
+// Disederhanakan: SEMUA email keluar (invoice ke pelanggan & notifikasi
+// pesanan baru ke admin) pakai 1 akun SMTP yang sama, yaitu SMTP_ADMIN_*.
+// Admin/CS toko bisa follow up pelanggan langsung dari inbox yang sama,
+// tidak perlu setup akun email terpisah lagi.
 //
-// Kalau salah satu belum diisi di .env, otomatis fallback pakai variabel
-// SMTP_* yang lama (satu akun untuk semua) supaya tetap jalan.
+// (SMTP_CS_* di .env lama, kalau masih ada, sekarang tidak dipakai lagi.
+// Boleh dihapus, atau dibiarkan saja tidak masalah.)
 // ---------------------------------------------------------------------
 const transporters = {};
 
@@ -85,39 +247,78 @@ function getTransporter(prefix) {
       port: Number(port || 587),
       secure: String(port) === "465", // true untuk port 465, false untuk 587/25
       auth: { user, pass },
+      // Timeout eksplisit supaya kalau port SMTP diblokir firewall/ISP,
+      // proses gagal cepat dengan pesan jelas (ETIMEDOUT), bukan menggantung diam.
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
     });
   }
   return transporters[prefix];
 }
 
+// Terjemahkan error SMTP teknis jadi pesan yang gampang didiagnosis.
+function explainSmtpError(err) {
+  const code = err?.code || "";
+  const msg = (err?.response || err?.message || "").toString();
+
+  if (code === "EAUTH" || /535|Username and Password not accepted/i.test(msg)) {
+    return "AUTH GAGAL — App Password salah/kadaluarsa, atau 2-Step Verification belum aktif di akun Gmail pengirim. Generate ulang App Password baru.";
+  }
+  if (code === "ETIMEDOUT" || code === "ESOCKET" || code === "ECONNECTION") {
+    return "KONEKSI GAGAL/TIMEOUT — kemungkinan port SMTP (587/465) diblokir oleh firewall/antivirus/ISP tempat server ini berjalan. Coba jaringan lain atau buka port tsb.";
+  }
+  if (/rate limit|too many/i.test(msg)) {
+    return "DITOLAK GMAIL — kuota/rate limit akun Gmail terlampaui untuk sementara. Coba lagi beberapa menit lagi.";
+  }
+  return msg || "Error tidak dikenali, lihat detail lengkap di atas.";
+}
+
 async function sendInvoiceEmail(order, toEmail) {
-  const { from } = buildCreds("CS");
-  const transporter = getTransporter("CS");
+  // Dulu pakai akun SMTP_CS_* terpisah, sekarang disederhanakan: pakai akun
+  // SMTP_ADMIN_* yang sama dengan yang mengirim notifikasi ke admin — supaya
+  // tidak perlu setup 2 akun email berbeda, cukup 1 akun toko saja.
+  const { from } = buildCreds("ADMIN");
+  const transporter = getTransporter("ADMIN");
   if (!transporter) {
     console.warn(
-      "[notify] SMTP CS belum dikonfigurasi di .env — email invoice dilewati.",
+      "[notify] SMTP Admin belum dikonfigurasi di .env — email invoice dilewati.",
     );
-    return;
+    return { ok: false, reason: "SMTP belum dikonfigurasi." };
   }
   if (!toEmail) {
     console.warn(
       "[notify] Tidak ada alamat email tujuan — email invoice dilewati.",
     );
-    return;
+    return { ok: false, reason: "Tidak ada alamat email tujuan." };
   }
 
   try {
-    await transporter.sendMail({
+    const content = await getMergedContent().catch(() => null);
+    const whatsappLink = content?.footer?.whatsappLink;
+
+    const info = await transporter.sendMail({
       from,
       to: toEmail,
       subject: `Invoice Pesanan ${order.orderNumber} — Optik Kayumanis`,
-      text: buildInvoiceText(order),
+      text: buildInvoiceText(order, whatsappLink, content),
+      html: buildInvoiceHtml(order, whatsappLink, content),
     });
-    console.log(`[notify] Email invoice (CS) terkirim ke ${toEmail}`);
+    console.log(
+      `[notify] Email invoice terkirim ke ${toEmail} (messageId: ${info.messageId})`,
+    );
+    return { ok: true };
   } catch (err) {
     // Sengaja tidak di-throw ulang: kegagalan kirim notifikasi TIDAK BOLEH
     // menggagalkan proses checkout / pembayaran.
-    console.error("[notify] Gagal mengirim email invoice:", err.message);
+    const reason = explainSmtpError(err);
+    console.error(
+      `[notify] Gagal mengirim email invoice ke ${toEmail} — ${reason}`,
+      "\n[notify] Detail teknis:",
+      err.code || "",
+      err.response || err.message,
+    );
+    return { ok: false, reason };
   }
 }
 
@@ -144,6 +345,7 @@ async function sendInvoiceWhatsapp(order) {
   }
 
   try {
+    const content = await getMergedContent().catch(() => null);
     const target = normalizePhoneToWhatsapp(order.phone);
     const res = await fetch("https://api.fonnte.com/send", {
       method: "POST",
@@ -153,7 +355,7 @@ async function sendInvoiceWhatsapp(order) {
       },
       body: new URLSearchParams({
         target,
-        message: buildInvoiceText(order),
+        message: buildInvoiceText(order, null, content),
       }),
     });
 
@@ -196,6 +398,8 @@ async function sendAdminOrderAlert(order) {
       .map((i) => `- ${i.name} x${i.quantity} (${formatRupiah(i.price * i.quantity)})`)
       .join("\n");
 
+    const waUrl = buildAdminFollowUpWaUrl(order);
+
     const text = `Halo Admin Optik Kayumanis,
 
 Ada PESANAN BARU yang masuk ke sistem:
@@ -210,13 +414,49 @@ ${itemLines}
 Alamat Pengiriman:
 ${order.shippingAddress}, ${order.city}, ${order.province} ${order.postalCode}
 
-Silakan cek panel admin di /admin/orders untuk memproses pesanan ini.`;
+Silakan cek panel admin di /admin/orders untuk memproses pesanan ini.${
+      waUrl ? `\n\nChat langsung ke customer via WhatsApp:\n${waUrl}` : ""
+    }`;
+
+    const itemRowsHtml = order.items
+      .map(
+        (i) =>
+          `<tr><td style="padding:4px 0;color:#334155;">${i.name} × ${i.quantity}</td><td style="padding:4px 0;text-align:right;color:#334155;">${formatRupiah(i.price * i.quantity)}</td></tr>`,
+      )
+      .join("");
+
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#0f172a;">
+        <p>Halo Admin Optik Kayumanis,</p>
+        <p><strong>Ada PESANAN BARU</strong> yang masuk ke sistem:</p>
+        <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;">
+          <tr><td style="padding:4px 0;color:#64748b;">No. Pesanan</td><td style="padding:4px 0;text-align:right;">${order.orderNumber}</td></tr>
+          <tr><td style="padding:4px 0;color:#64748b;">Pemesan</td><td style="padding:4px 0;text-align:right;">${order.recipientName} (${order.phone})</td></tr>
+          <tr><td style="padding:4px 0;color:#64748b;">Total</td><td style="padding:4px 0;text-align:right;font-weight:bold;">${formatRupiah(order.total)}</td></tr>
+        </table>
+        <p style="margin:16px 0 4px;font-weight:bold;">Rincian Produk:</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">${itemRowsHtml}</table>
+        <p style="margin:16px 0 4px;font-weight:bold;">Alamat Pengiriman:</p>
+        <p style="margin:0;font-size:14px;color:#334155;">${order.shippingAddress}, ${order.city}, ${order.province} ${order.postalCode}</p>
+        ${
+          waUrl
+            ? `<div style="margin:24px 0;">
+                <a href="${waUrl}" target="_blank" style="display:inline-block;background-color:#25D366;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:12px 20px;border-radius:8px;">
+                  💬 Chat Customer via WhatsApp
+                </a>
+              </div>`
+            : ""
+        }
+        <p style="font-size:13px;color:#64748b;">Silakan cek panel admin di <strong>/admin/orders</strong> untuk memproses pesanan ini.</p>
+      </div>
+    `;
 
     await transporter.sendMail({
       from,
       to: adminEmail,
       subject: `🔔 [Pesanan Baru] ${order.orderNumber} - ${order.recipientName}`,
       text,
+      html,
     });
     console.log(`[notify] Notifikasi pesanan baru terkirim ke Admin (${adminEmail})`);
   } catch (err) {
@@ -225,11 +465,12 @@ Silakan cek panel admin di /admin/orders untuk memproses pesanan ini.`;
 }
 
 async function sendOrderInvoiceNotifications(order, user) {
-  await Promise.allSettled([
+  const [invoiceResult] = await Promise.allSettled([
     sendInvoiceEmail(order, user?.email),
     sendAdminOrderAlert(order),
     // sendInvoiceWhatsapp(order),
   ]);
+  return invoiceResult.status === "fulfilled" ? invoiceResult.value : { ok: false, reason: invoiceResult.reason?.message };
 }
 
 // ---------------------------------------------------------------------
@@ -289,4 +530,4 @@ memperpanjang masa aktif website.
   }
 }
 
-module.exports = { sendOrderInvoiceNotifications, sendLicenseExpiredNotification };
+module.exports = { sendOrderInvoiceNotifications, sendInvoiceEmail, sendLicenseExpiredNotification };

@@ -178,6 +178,13 @@ function mergeContent(saved) {
   return deepMerge(DEFAULT_CONTENT, saved);
 }
 
+// Dipakai dari luar controller (mis. notify.js) untuk ambil konten toko yang
+// sudah tersimpan (rekening bank, nomor WA, dll), tanpa perlu lewat req/res HTTP.
+async function getMergedContent() {
+  const row = await prisma.siteContent.findUnique({ where: { id: "main" } });
+  return mergeContent(row?.data);
+}
+
 async function getContent(req, res) {
   const row = await prisma.siteContent.findUnique({ where: { id: "main" } });
   res.json({ content: mergeContent(row?.data) });
@@ -198,4 +205,4 @@ async function updateContent(req, res) {
   res.json({ content: mergeContent(row.data) });
 }
 
-module.exports = { getContent, updateContent, DEFAULT_CONTENT };
+module.exports = { getContent, updateContent, getMergedContent, DEFAULT_CONTENT };
