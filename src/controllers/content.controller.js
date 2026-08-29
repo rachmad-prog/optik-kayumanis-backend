@@ -178,6 +178,8 @@ function mergeContent(saved) {
   return deepMerge(DEFAULT_CONTENT, saved);
 }
 
+const { getProxyBaseUrl, normalizeR2Urls } = require("../utils/normalizeUrl");
+
 // Dipakai dari luar controller (mis. notify.js) untuk ambil konten toko yang
 // sudah tersimpan (rekening bank, nomor WA, dll), tanpa perlu lewat req/res HTTP.
 async function getMergedContent() {
@@ -187,7 +189,9 @@ async function getMergedContent() {
 
 async function getContent(req, res) {
   const row = await prisma.siteContent.findUnique({ where: { id: "main" } });
-  res.json({ content: mergeContent(row?.data) });
+  const rawContent = mergeContent(row?.data);
+  const proxyBaseUrl = getProxyBaseUrl(req);
+  res.json({ content: normalizeR2Urls(rawContent, proxyBaseUrl) });
 }
 
 async function updateContent(req, res) {
@@ -202,7 +206,8 @@ async function updateContent(req, res) {
     update: { data: nextData },
   });
 
-  res.json({ content: mergeContent(row.data) });
+  const proxyBaseUrl = getProxyBaseUrl(req);
+  res.json({ content: normalizeR2Urls(mergeContent(row.data), proxyBaseUrl) });
 }
 
 module.exports = { getContent, updateContent, getMergedContent, DEFAULT_CONTENT };

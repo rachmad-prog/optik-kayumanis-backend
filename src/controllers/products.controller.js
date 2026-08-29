@@ -21,6 +21,8 @@ const productSchema = z.object({
   images: z.array(z.string().url()).optional(),
 });
 
+const { getProxyBaseUrl, normalizeR2Urls } = require("../utils/normalizeUrl");
+
 // GET /api/products?category=&q=&featured=&page=&limit=
 async function listProducts(req, res) {
   const { category, q, featured, page = "1", limit = "12" } = req.query;
@@ -52,8 +54,10 @@ async function listProducts(req, res) {
     prisma.product.count({ where }),
   ]);
 
+  const proxyBaseUrl = getProxyBaseUrl(req);
+
   res.json({
-    items,
+    items: normalizeR2Urls(items, proxyBaseUrl),
     pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) },
   });
 }
@@ -66,7 +70,8 @@ async function getProductBySlug(req, res) {
   if (!product || !product.isActive) {
     return res.status(404).json({ message: "Produk tidak ditemukan." });
   }
-  res.json({ product });
+  const proxyBaseUrl = getProxyBaseUrl(req);
+  res.json({ product: normalizeR2Urls(product, proxyBaseUrl) });
 }
 
 // --- Admin ---
@@ -77,7 +82,8 @@ async function adminGetProduct(req, res) {
     include: { images: true, category: true },
   });
   if (!product) return res.status(404).json({ message: "Produk tidak ditemukan." });
-  res.json({ product });
+  const proxyBaseUrl = getProxyBaseUrl(req);
+  res.json({ product: normalizeR2Urls(product, proxyBaseUrl) });
 }
 
 async function adminListProducts(req, res) {
@@ -85,7 +91,8 @@ async function adminListProducts(req, res) {
     include: { images: true, category: true },
     orderBy: { createdAt: "desc" },
   });
-  res.json({ items: products });
+  const proxyBaseUrl = getProxyBaseUrl(req);
+  res.json({ items: normalizeR2Urls(products, proxyBaseUrl) });
 }
 
 async function createProduct(req, res) {

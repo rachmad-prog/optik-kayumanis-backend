@@ -13,6 +13,8 @@ function buildObjectKey(originalname) {
   return `products/${uniqueId}${ext}`;
 }
 
+const { getProxyBaseUrl } = require("../utils/normalizeUrl");
+
 async function uploadFiles(req, res) {
   const files = req.files || [];
 
@@ -28,11 +30,11 @@ async function uploadFiles(req, res) {
   }
 
   try {
-    const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
-    const host = req.headers["x-forwarded-host"] || req.get("host");
-    const fallbackBaseUrl = `${protocol}://${host}/api/uploads/file`;
-
-    const baseUrl = R2_PUBLIC_URL ? R2_PUBLIC_URL.replace(/\/+$/, "") : fallbackBaseUrl;
+    const proxyBaseUrl = getProxyBaseUrl(req);
+    // Jika R2_PUBLIC_URL berisi domain *.r2.dev (yang sering tidak publik / terblokir ISP),
+    // gunakan proxy URL API backend agar gambar dipastikan selalu bisa diakses.
+    const isR2DevUrl = R2_PUBLIC_URL && R2_PUBLIC_URL.includes(".r2.dev");
+    const baseUrl = (R2_PUBLIC_URL && !isR2DevUrl) ? R2_PUBLIC_URL.replace(/\/+$/, "") : proxyBaseUrl;
 
     const urls = await Promise.all(
       files.map(async (file) => {

@@ -1,12 +1,15 @@
 const slugify = require("slugify");
 const prisma = require("../config/db");
 
+const { getProxyBaseUrl, normalizeR2Urls } = require("../utils/normalizeUrl");
+
 async function listCategories(req, res) {
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },
     include: { _count: { select: { products: true } } },
   });
-  res.json({ items: categories });
+  const proxyBaseUrl = getProxyBaseUrl(req);
+  res.json({ items: normalizeR2Urls(categories, proxyBaseUrl) });
 }
 
 async function createCategory(req, res) {
@@ -21,7 +24,8 @@ async function createCategory(req, res) {
   const category = await prisma.category.create({
     data: { name, slug, imageUrl: imageUrl || null },
   });
-  res.status(201).json({ category });
+  const proxyBaseUrl = getProxyBaseUrl(req);
+  res.status(201).json({ category: normalizeR2Urls(category, proxyBaseUrl) });
 }
 
 // Lets admins set/replace the catalog image for a category (uploaded manually,
@@ -43,7 +47,8 @@ async function updateCategory(req, res) {
 
   try {
     const category = await prisma.category.update({ where: { id: req.params.id }, data });
-    res.json({ category });
+    const proxyBaseUrl = getProxyBaseUrl(req);
+    res.json({ category: normalizeR2Urls(category, proxyBaseUrl) });
   } catch {
     res.status(404).json({ message: "Kategori tidak ditemukan." });
   }
