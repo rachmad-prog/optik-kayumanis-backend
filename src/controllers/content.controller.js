@@ -178,7 +178,7 @@ function mergeContent(saved) {
   return deepMerge(DEFAULT_CONTENT, saved);
 }
 
-const { getProxyBaseUrl, normalizeR2Urls } = require("../utils/normalizeUrl");
+const { getProxyBaseUrl, normalizeR2Urls, extractAllR2Urls, deleteR2Files } = require("../utils/normalizeUrl");
 
 // Dipakai dari luar controller (mis. notify.js) untuk ambil konten toko yang
 // sudah tersimpan (rekening bank, nomor WA, dll), tanpa perlu lewat req/res HTTP.
@@ -198,7 +198,17 @@ async function updateContent(req, res) {
   const incoming = req.body || {};
   const existing = await prisma.siteContent.findUnique({ where: { id: "main" } });
   const currentData = existing?.data && typeof existing.data === "object" ? existing.data : {};
+
+  // Cari gambar R2 yang dibuang / dihapus saat admin mengedit konten
+  const oldImageUrls = extractAllR2Urls(currentData);
+
   const nextData = deepMerge(currentData, incoming);
+
+  const newImageUrls = extractAllR2Urls(nextData);
+  const removedUrls = oldImageUrls.filter((url) => !newImageUrls.includes(url));
+  if (removedUrls.length > 0) {
+    await deleteR2Files(removedUrls);
+  }
 
   const row = await prisma.siteContent.upsert({
     where: { id: "main" },

@@ -60,4 +60,11 @@ async function deleteR2Files(urls) {
   }
 }
 
-module.exports = { getProxyBaseUrl, normalizeR2Urls, extractR2Key, deleteR2Files };
+function extractAllR2Urls(obj) {
+  if (!obj) return [];
+  const str = typeof obj === "string" ? obj : JSON.stringify(obj);
+  const matches = str.match(/(?:https?:\/\/[^\s"'`]+\/)?products\/[a-zA-Z0-9_.-]+/g);
+  return matches ? Array.from(new Set(matches)) : [];
+}
+
+module.exports = { getProxyBaseUrl, normalizeR2Urls, extractR2Key, extractAllR2Urls, deleteR2Files };
