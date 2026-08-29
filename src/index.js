@@ -14,6 +14,9 @@ const adminRoutes = require("./routes/admin.routes");
 const contentRoutes = require("./routes/content.routes");
 const uploadsRoutes = require("./routes/uploads.routes");
 const usersRoutes = require("./routes/users.routes");
+const articlesRoutes = require("./routes/articles.routes");
+const trackingRoutes = require("./routes/tracking.routes");
+
 
 // ... import/require lainnya ...
 const licenseRouter = require("./routes/license"); // 1. Hubungkan file route baru
@@ -74,6 +77,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin/users", usersRoutes);
 app.use("/api/content", contentRoutes);
 app.use("/api/uploads", uploadsRoutes);
+app.use("/api/articles", articlesRoutes);
+app.use("/api/tracking", trackingRoutes);
+
 
 // 404
 app.use((req, res) =>

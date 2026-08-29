@@ -158,3 +158,29 @@ model License {
   // bukan berulang setiap ada request yang kena blokir.
   expiryNotifiedAt DateTime?
 }
+
+// Artikel blog/promo yang dikelola admin untuk ditampilkan di halaman publik
+model Article {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  content     String    // Konten artikel (HTML atau plain text)
+  thumbnail   String?   // URL gambar thumbnail (di-upload ke R2)
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Singleton row (id = "main") untuk menyimpan Pixel/Tag ID tracking iklan.
+// Hanya bisa diakses dan diubah oleh DIREKTUR.
+model TrackingSettings {
+  id               String   @id @default("main")
+  metaPixelId      String?  // Meta Ads Pixel ID (contoh: 123456789012345)
+  googleAdsId      String?  // Google Ads Conversion ID (contoh: AW-123456789)
+  googleAdsLabel   String?  // Google Ads Conversion Label (contoh: AbCdEfGhIjKlMnOp)
+  gtmId            String?  // Google Tag Manager ID (contoh: GTM-ABCDEF)
+  gaId             String?  // Google Analytics 4 Measurement ID (contoh: G-XXXXXXXXXX)
+  updatedAt        DateTime @updatedAt
+}
