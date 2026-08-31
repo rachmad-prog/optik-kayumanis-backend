@@ -27,7 +27,7 @@ const app = express();
 // app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 // app.use(
 //   cors({
-//     origin: process.env.CLIENT_URL || "https://optikkayumanis.id/",
+//     origin: process.env.CLIENT_URL || "https://optik-kayumanis-frontend.vercel.app/",
 //     credentials: true,
 //   }),
 // );
@@ -35,7 +35,7 @@ const app = express();
 // Ambil variabel dari .env
 const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",").map((o) => o.trim().replace(/\/$/, ""))
-  : ["https://optikkayumanis.id"];
+  : ["https://optik-kayumanis-frontend.vercel.app"];
 
 app.use(
   cors({
