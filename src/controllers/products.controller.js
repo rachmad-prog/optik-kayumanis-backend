@@ -159,14 +159,33 @@ async function deleteProduct(req, res) {
   });
   if (!existing) return res.status(404).json({ message: "Produk tidak ditemukan." });
 
-  // Hapus semua foto produk ini dari Cloudflare R2
+  // Kalau produk ini pernah dipesan, jangan hard-delete (akan melanggar
+  // foreign key RESTRICT dari OrderItem dan bikin histori pesanan rusak).
+  // Nonaktifkan saja supaya tidak muncul di toko tapi histori order tetap utuh.
+  const orderItemCount = await prisma.orderItem.count({
+    where: { productId: existing.id },
+  });
+
+  if (orderItemCount > 0) {
+    await prisma.product.update({
+      where: { id: existing.id },
+      data: { isActive: false },
+    });
+    return res.json({
+      message:
+        "Produk sudah pernah dipesan sehingga tidak bisa dihapus permanen. Produk dinonaktifkan (disembunyikan dari toko) agar histori pesanan tetap aman.",
+      softDeleted: true,
+    });
+  }
+
+  // Belum pernah dipesan sama sekali -> aman untuk dihapus permanen
   if (existing.images && existing.images.length > 0) {
     const urls = existing.images.map((img) => img.url);
     await deleteR2Files(urls);
   }
 
   await prisma.product.delete({ where: { id: req.params.id } });
-  res.json({ message: "Produk dihapus." });
+  res.json({ message: "Produk dihapus.", softDeleted: false });
 }
 
 module.exports = {
