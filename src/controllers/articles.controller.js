@@ -1,4 +1,4 @@
-﻿const prisma = require("../config/db");
+const prisma = require("../config/db");
 
 // Buat slug dari judul artikel
 function slugify(str) {
@@ -36,7 +36,7 @@ async function listArticles(req, res) {
     prisma.article.count({ where: { isPublished: true } }),
     prisma.article.findMany({
       where: { isPublished: true },
-      orderBy: { publishedAt: "desc" },
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       skip,
       take: limit,
       select: {
