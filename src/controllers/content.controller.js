@@ -167,7 +167,12 @@ const DEFAULT_CONTENT = {
     email: "halo@optikkayumanis.com",
     address: "Jl. Kayumanis No. 12, Bogor, Jawa Barat",
     hours: ["Senin – Jumat: 09.00 – 20.00", "Sabtu – Minggu: 10.00 – 18.00"],
-    socials: { instagram: "#", facebook: "#", tiktok: "#" },
+    socials: {
+      instagram: "#",
+      facebook: "#",
+      tiktok: "#",
+      katalogInstagram: "https://www.instagram.com/katalog.optikkayumanisbogor",
+    },
     mapEmbed: "",
     copyrightText: "Optik Kayumanis. Seluruh hak cipta dilindungi.",
   },
