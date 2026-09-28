@@ -92,6 +92,31 @@ const DEFAULT_CONTENT = {
     ],
     media: "",
   },
+  layananInfo: {
+    title: "Kami Menawarkan Berbagai Layanan Untuk Meningkatkan Kesehatan Mata Anda",
+    items: [
+      {
+        title: "Home Service",
+        desc: "Pemeriksaan mata langsung ke rumah, kantor, sekolah, atau pabrik Anda oleh tim optometris kami.",
+      },
+      {
+        title: "Pemeriksaan Refraksi",
+        desc: "Pemeriksaan mata akurat dengan peralatan modern untuk menentukan ukuran minus, plus, dan silinder.",
+      },
+      {
+        title: "Pembuatan Kacamata",
+        desc: "Pembuatan kacamata sesuai resep dengan pilihan frame dan lensa yang disesuaikan kebutuhan Anda.",
+      },
+      {
+        title: "Service",
+        desc: "Perbaikan, penyetelan, dan pembersihan kacamata agar tetap nyaman dan awet dipakai.",
+      },
+      {
+        title: "Konsultasi Seputar Kesehatan Mata",
+        desc: "Tanyakan keluhan dan perawatan mata Anda kepada tim kami, langsung di optik maupun lewat WhatsApp.",
+      },
+    ],
+  },
   layananSlider: {
     title: "Layanan Optik Kayumanis",
     subtitle: "Pilih layanan optik yang nyaman untuk kebutuhan mata keluarga Anda.",
